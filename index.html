@@ -646,7 +646,14 @@
 
             async loadAvailableCountries() {
                 try {
-                    const response = await fetch('https://date.nager.at/api/v3/AvailableCountries');
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                    
+                    const response = await fetch('https://date.nager.at/api/v3/AvailableCountries', {
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+                    
                     if (response.ok) {
                         this.availableCountries = await response.json();
                     } else {
@@ -871,10 +878,23 @@
                             return { year, cacheKey, holidays: null };
                         }
                         
-                        const response = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`);
-                        if (response.ok) {
-                            const holidays = await response.json();
-                            return { year, cacheKey, holidays };
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                        
+                        try {
+                            const response = await fetch(
+                                `https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`,
+                                { signal: controller.signal }
+                            );
+                            clearTimeout(timeoutId);
+                            
+                            if (response.ok) {
+                                const holidays = await response.json();
+                                return { year, cacheKey, holidays };
+                            }
+                        } catch (err) {
+                            clearTimeout(timeoutId);
+                            console.error(`Failed to fetch holidays for ${year}:`, err);
                         }
                         return { year, cacheKey, holidays: null };
                     });
@@ -933,7 +953,7 @@
             clearAutoMarkedHolidays() {
                 Object.keys(this.data.dates).forEach(dateStr => {
                     const dayData = this.data.dates[dateStr];
-                    if (dayData.autoMarked) {
+                    if (dayData && dayData.autoMarked) {
                         dayData.isHoliday = false;
                         delete dayData.autoMarked;
                         delete dayData.holidayName;

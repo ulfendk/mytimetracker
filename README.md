@@ -12,6 +12,7 @@ A simple, browser-based work time tracking application that requires no backend.
 - 💾 All data stored in browser (localStorage)
 - 📤 Save data as JSON
 - 📥 Load previously saved data
+- 📊 **Export to Excel** - Download monthly reports with detailed breakdowns
 - 🧮 Automatic calculation of daily and weekly totals
 - 📱 **Progressive Web App (PWA) - Install on your phone or desktop**
 
@@ -68,6 +69,36 @@ Click the "Save Data" button to download your time tracking data as a JSON file.
 
 ### Load Data
 Click the "Load Data" button and paste your previously saved JSON data to restore it.
+
+### Export to Excel
+Click the "Export to Excel" button to download a comprehensive monthly report as an Excel (.xlsx) file. The exported file contains three sheets:
+
+1. **Summary Sheet**: Monthly overview with key metrics
+   - Total actual hours worked
+   - Expected hours (based on working days)
+   - Balance (actual vs expected)
+   - Working days, days off, and weekend days
+   - Average hours per working day
+
+2. **Daily Details Sheet**: Complete breakdown of all days in the month
+   - Date and day of the week
+   - Start and end times for each work interval
+   - Break duration in minutes
+   - Hours worked per interval
+   - Total hours per day
+   - Holiday indicators
+
+3. **Weekly Breakdown Sheet**: Week-by-week summary
+   - Week starting date
+   - Expected hours for the week
+   - Actual hours worked
+   - Weekly balance
+
+The Excel export is perfect for:
+- Submitting time reports to HR or management
+- Analyzing your work patterns
+- Creating professional timesheets
+- Archiving monthly records
 
 ### Clear Data
 Use the "Clear All Data" button to reset the application (requires confirmation).

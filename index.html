@@ -896,6 +896,10 @@
                             // If no waiting worker, just reload
                             window.location.reload();
                         }
+                    }).catch((error) => {
+                        console.warn('Failed to get service worker registration:', error);
+                        // Fallback to simple reload
+                        window.location.reload();
                     });
                 } else {
                     window.location.reload();

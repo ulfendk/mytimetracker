@@ -707,7 +707,11 @@
             }
 
             showMonthlyOverview() {
-                this.currentMonthDate = new Date();
+                // Initialize to current month only if not already set or if explicitly reset
+                if (!this.monthlyOverviewInitialized) {
+                    this.currentMonthDate = new Date();
+                    this.monthlyOverviewInitialized = true;
+                }
                 this.renderMonthlyOverview();
                 document.getElementById('monthlyModal').classList.add('active');
             }
@@ -717,11 +721,15 @@
             }
 
             previousMonth() {
+                // Set day to 1 before changing month to avoid unexpected date rollovers
+                this.currentMonthDate.setDate(1);
                 this.currentMonthDate.setMonth(this.currentMonthDate.getMonth() - 1);
                 this.renderMonthlyOverview();
             }
 
             nextMonth() {
+                // Set day to 1 before changing month to avoid unexpected date rollovers
+                this.currentMonthDate.setDate(1);
                 this.currentMonthDate.setMonth(this.currentMonthDate.getMonth() + 1);
                 this.renderMonthlyOverview();
             }

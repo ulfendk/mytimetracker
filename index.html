@@ -708,7 +708,7 @@
                     </div>
                     <div class="stat">
                         <div class="stat-label">Expected Hours</div>
-                        <div class="stat-value" id="weekExpected">37.5h</div>
+                        <div class="stat-value" id="weekExpected">37h</div>
                     </div>
                     <div class="stat">
                         <div class="stat-label">Balance</div>
@@ -803,7 +803,7 @@
                 this.data = this.loadData();
                 this.currentWeekStart = this.getMonday(new Date());
                 this.currentMonthDate = new Date();
-                this.expectedHoursPerDay = 7.5; // Standard work day
+                this.expectedHoursPerDay = 7.4; // Average work day (37h/5 days)
                 this.workingDaysPerWeek = 5; // Default working days per week (Mon-Fri)
                 this.availableCountries = [];
                 this.init();
@@ -984,7 +984,7 @@
 
             getExpectedHoursForWeek() {
                 const weekKey = this.getWeekKey();
-                const defaultExpectedHours = this.workingDaysPerWeek * this.expectedHoursPerDay;
+                const defaultExpectedHours = 37; // 7.5h Mon-Thu + 7h Fri = 37h
                 return this.data.weeklyExpectedHours[weekKey] || defaultExpectedHours;
             }
 
@@ -1538,7 +1538,7 @@
                 // Sort by week start date and add to sheet
                 Object.keys(weeklyGroups).sort().forEach(weekKey => {
                     const week = weeklyGroups[weekKey];
-                    const expectedHours = this.data.weeklyExpectedHours[weekKey] || 37.5;
+                    const expectedHours = this.data.weeklyExpectedHours[weekKey] || 37;
                     const balance = week.actualHours - expectedHours;
                     
                     weeklyData.push([
@@ -1678,7 +1678,7 @@
                     const monday = this.getMonday(date);
                     const weekKey = this.formatDate(monday);
                     if (!weeklyExpectedHours[weekKey]) {
-                        weeklyExpectedHours[weekKey] = this.data.weeklyExpectedHours[weekKey] || 37.5;
+                        weeklyExpectedHours[weekKey] = this.data.weeklyExpectedHours[weekKey] || 37;
                     }
                 });
 
@@ -1697,7 +1697,7 @@
                             
                             if (!processedWeeks.has(weekKey)) {
                                 processedWeeks.add(weekKey);
-                                const weekExpected = this.data.weeklyExpectedHours[weekKey] || 37.5;
+                                const weekExpected = this.data.weeklyExpectedHours[weekKey] || 37;
                                 
                                 // Count weekdays in this week that are in the current month
                                 const weekDates = [];

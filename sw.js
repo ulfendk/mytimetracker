@@ -44,7 +44,12 @@ self.addEventListener('fetch', (event) => {
 
             return response;
           }
-        );
+        ).catch((error) => {
+          // Network request failed, and no cache available
+          console.log('Fetch failed; returning offline page instead.', error);
+          // Could return a custom offline page here if we had one cached
+          throw error;
+        });
       })
   );
 });

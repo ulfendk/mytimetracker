@@ -7,6 +7,7 @@ A simple, browser-based work time tracking application that requires no backend.
 - 📊 Track multiple work intervals per day
 - ⏰ Record break times for each interval
 - 📅 View and manage work hours by week
+- 📆 Monthly overview with balance tracking (actual vs expected hours)
 - 🏖️ Mark days off and holidays
 - 💾 All data stored in browser (localStorage)
 - 📥 Export data as JSON
@@ -25,6 +26,7 @@ The application is automatically deployed to GitHub Pages: [View Live Demo](http
 4. Set start time, end time, and break duration for each interval
 5. Mark days off/holidays using the "Mark as Day Off" button
 6. View your weekly summary at the bottom of the page
+7. Click "Monthly Overview" to see monthly statistics and balance tracking
 
 ## Data Management
 
@@ -39,6 +41,19 @@ Click the "Import Data" button and paste your previously exported JSON data to r
 
 ### Clear Data
 Use the "Clear All Data" button to reset the application (requires confirmation).
+
+### Monthly Overview
+Click the "Monthly Overview" button to view comprehensive monthly statistics:
+- **Actual vs Expected Hours**: Compare your actual work hours against expected hours (based on working days × 7.5 hours/day)
+- **Balance Tracking**: See if you're ahead or behind on your expected hours
+- **Monthly Statistics**: View working days, days off, and average hours per day
+- **Daily Breakdown**: Review all work days and holidays for the month
+- **Month Navigation**: Browse through different months to review historical data
+
+The monthly overview automatically:
+- Excludes weekends from expected hours calculations
+- Accounts for marked days off/holidays
+- Color-codes the balance (green for positive, red for negative)
 
 ## Technical Details
 

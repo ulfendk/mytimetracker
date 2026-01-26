@@ -10,8 +10,8 @@ A simple, browser-based work time tracking application that requires no backend.
 - 📆 Monthly overview with balance tracking (actual vs expected hours)
 - 🏖️ Mark days off and holidays
 - 💾 All data stored in browser (localStorage)
-- 📥 Save data as JSON
-- 📤 Load previously saved data
+- 📤 Save data as JSON
+- 📥 Load previously saved data
 - 🧮 Automatic calculation of daily and weekly totals
 - 📱 **Progressive Web App (PWA) - Install on your phone or desktop**
 

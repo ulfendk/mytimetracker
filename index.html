@@ -5,6 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Time Tracker</title>
     <style>
+        :root {
+            /* Light mode colors */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+            --accent-primary: #4a5568;
+            --accent-hover: #2d3748;
+            --success-bg: #d1f4e0;
+            --success-text: #0f5132;
+            --success-border: #a3cfbb;
+            --danger-bg: #f8d7da;
+            --danger-text: #721c24;
+            --danger-border: #f1aeb5;
+            --info-bg: #cfe2ff;
+            --info-text: #084298;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] {
+            /* Dark mode colors */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a3a;
+            --text-primary: #f8f9fa;
+            --text-secondary: #e9ecef;
+            --text-muted: #adb5bd;
+            --border-color: #495057;
+            --accent-primary: #718096;
+            --accent-hover: #a0aec0;
+            --success-bg: #1a4d2e;
+            --success-text: #8fd19e;
+            --success-border: #2d5f3f;
+            --danger-bg: #4d1a1a;
+            --danger-text: #f1aeb5;
+            --danger-border: #5f2d2d;
+            --info-bg: #1a2d4d;
+            --info-text: #9fc3ff;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,25 +61,45 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-primary);
             min-height: 100vh;
             padding: 20px;
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-lg);
             overflow: hidden;
         }
 
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--accent-primary);
+            color: var(--bg-secondary);
             padding: 30px;
             text-align: center;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: background 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .country-selector {
@@ -49,11 +117,11 @@
 
         .country-selector select {
             padding: 8px 12px;
-            border: none;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
             font-size: 1em;
-            background: white;
-            color: #2d3748;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             cursor: pointer;
             min-width: 200px;
         }
@@ -90,47 +158,50 @@
         }
 
         .btn-primary {
-            background: #667eea;
-            color: white;
+            background: var(--accent-primary);
+            color: var(--bg-secondary);
         }
 
         .btn-primary:hover {
-            background: #5568d3;
+            background: var(--accent-hover);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-secondary {
-            background: #48bb78;
-            color: white;
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
         }
 
         .btn-secondary:hover {
-            background: #38a169;
+            background: var(--success-border);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-danger {
-            background: #f56565;
-            color: white;
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            border: 1px solid var(--danger-border);
         }
 
         .btn-danger:hover {
-            background: #e53e3e;
+            background: var(--danger-border);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-info {
-            background: #4299e1;
-            color: white;
+            background: var(--info-bg);
+            color: var(--info-text);
+            border: 1px solid var(--info-text);
         }
 
         .btn-info:hover {
-            background: #3182ce;
+            opacity: 0.8;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+            box-shadow: var(--shadow-md);
         }
 
         .week-selector {
@@ -139,14 +210,14 @@
             gap: 10px;
             margin-bottom: 20px;
             padding: 15px;
-            background: #f7fafc;
+            background: var(--bg-tertiary);
             border-radius: 5px;
         }
 
         .week-selector button {
             padding: 8px 16px;
-            background: #667eea;
-            color: white;
+            background: var(--accent-primary);
+            color: var(--bg-secondary);
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -154,7 +225,7 @@
         }
 
         .week-selector button:hover {
-            background: #5568d3;
+            background: var(--accent-hover);
         }
 
         .week-info {
@@ -170,21 +241,21 @@
         }
 
         .day-card {
-            background: #f7fafc;
+            background: var(--bg-tertiary);
             border-radius: 8px;
             padding: 20px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--border-color);
             transition: all 0.3s;
         }
 
         .day-card:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            border-color: var(--accent-primary);
+            box-shadow: var(--shadow-md);
         }
 
         .day-card.holiday {
-            background: #fff5f5;
-            border-color: #fc8181;
+            background: var(--danger-bg);
+            border-color: var(--danger-border);
         }
 
         .day-header {
@@ -193,24 +264,24 @@
             align-items: center;
             margin-bottom: 15px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .day-title {
             font-size: 1.3em;
             font-weight: 700;
-            color: #2d3748;
+            color: var(--text-primary);
         }
 
         .day-total {
             font-size: 1.2em;
             font-weight: 600;
-            color: #667eea;
+            color: var(--accent-primary);
         }
 
         .holiday-badge {
-            background: #fc8181;
-            color: white;
+            background: var(--danger-border);
+            color: var(--danger-text);
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.85em;
@@ -227,10 +298,10 @@
             gap: 15px;
             align-items: center;
             padding: 12px;
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 5px;
             margin-bottom: 10px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
         }
 
         .interval-times {
@@ -241,13 +312,15 @@
 
         .interval input {
             padding: 8px;
-            border: 1px solid #cbd5e0;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             font-size: 0.95em;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
         }
 
         .interval-duration {
-            color: #4a5568;
+            color: var(--text-secondary);
             font-weight: 600;
         }
 
@@ -276,8 +349,8 @@
         }
 
         .summary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--accent-primary);
+            color: var(--bg-secondary);
             padding: 30px;
             border-radius: 8px;
             margin-top: 30px;
@@ -296,7 +369,7 @@
         }
 
         .stat {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
             padding: 20px;
             border-radius: 8px;
             backdrop-filter: blur(10px);
@@ -331,7 +404,7 @@
         }
 
         .modal-content {
-            background: white;
+            background: var(--bg-secondary);
             padding: 30px;
             border-radius: 10px;
             max-width: 500px;
@@ -344,6 +417,7 @@
             font-size: 1.5em;
             font-weight: 700;
             margin-bottom: 20px;
+            color: var(--text-primary);
         }
 
         .modal-actions {
@@ -356,10 +430,12 @@
             width: 100%;
             min-height: 200px;
             padding: 10px;
-            border: 1px solid #cbd5e0;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
             font-family: monospace;
             font-size: 0.9em;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
         }
 
         .file-input {
@@ -374,19 +450,21 @@
         }
 
         .monthly-stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: var(--accent-primary);
+            color: var(--bg-secondary);
             padding: 20px;
             border-radius: 8px;
             text-align: center;
         }
 
         .monthly-stat-card.positive {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            background: var(--success-border);
+            color: var(--success-text);
         }
 
         .monthly-stat-card.negative {
-            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            background: var(--danger-border);
+            color: var(--danger-text);
         }
 
         .monthly-stat-label {
@@ -403,7 +481,7 @@
         .daily-breakdown {
             max-height: 300px;
             overflow-y: auto;
-            background: #f7fafc;
+            background: var(--bg-tertiary);
             border-radius: 5px;
             padding: 15px;
         }
@@ -412,7 +490,7 @@
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .daily-row:last-child {
@@ -421,16 +499,16 @@
 
         .daily-date {
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text-primary);
         }
 
         .daily-hours {
-            color: #667eea;
+            color: var(--accent-primary);
             font-weight: 600;
         }
 
         .daily-hours.holiday {
-            color: #fc8181;
+            color: var(--danger-text);
         }
 
         @media (max-width: 768px) {
@@ -455,6 +533,7 @@
 <body>
     <div class="container">
         <header>
+            <button class="theme-toggle" onclick="app.toggleTheme()" aria-label="Toggle light/dark theme" id="themeToggle">🌓</button>
             <h1>📊 My Time Tracker</h1>
             <p class="subtitle">Track your work hours with ease</p>
             <div class="country-selector">
@@ -549,8 +628,41 @@
             }
 
             init() {
+                this.initTheme();
                 this.loadAvailableCountries();
                 this.render();
+            }
+
+            initTheme() {
+                // Load theme preference from localStorage with error handling
+                let savedTheme = 'light';
+                try {
+                    savedTheme = localStorage.getItem('theme') || 'light';
+                } catch (e) {
+                    console.warn('localStorage not available, using default theme');
+                }
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                this.updateThemeButton(savedTheme);
+            }
+
+            toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                try {
+                    localStorage.setItem('theme', newTheme);
+                } catch (e) {
+                    console.warn('Unable to save theme preference');
+                }
+                this.updateThemeButton(newTheme);
+            }
+
+            updateThemeButton(theme) {
+                const button = document.getElementById('themeToggle');
+                if (button) {
+                    button.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+                    button.setAttribute('aria-pressed', theme === 'dark');
+                }
             }
 
             loadData() {
@@ -1212,7 +1324,7 @@
                             <div class="monthly-stat-value">${stats.avgHoursPerWorkingDay.toFixed(1)}h</div>
                         </div>
                     </div>
-                    <div style="text-align: center; color: #718096; font-size: 0.9em; margin-top: 10px;">
+                    <div style="text-align: center; color: var(--text-muted); font-size: 0.9em; margin-top: 10px;">
                         Expected: ${stats.expectedWorkingDays} working days × ${this.expectedHoursPerDay}h/day
                     </div>
                 `;
@@ -1239,12 +1351,12 @@
                     }).join('');
 
                 document.getElementById('monthlyDetails').innerHTML = breakdown ? `
-                    <h3 style="margin-bottom: 10px; color: #2d3748;">Daily Breakdown</h3>
+                    <h3 style="margin-bottom: 10px; color: var(--text-primary);">Daily Breakdown</h3>
                     <div class="daily-breakdown">
                         ${breakdown}
                     </div>
                 ` : `
-                    <div style="text-align: center; color: #718096; padding: 20px;">
+                    <div style="text-align: center; color: var(--text-muted); padding: 20px;">
                         No work hours recorded for this month
                     </div>
                 `;
@@ -1291,7 +1403,7 @@
                             <div class="day-header">
                                 <div>
                                     <div class="day-title">${dayNames[index]}</div>
-                                    <div style="color: #718096; font-size: 0.9em;">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                                    <div style="color: var(--text-muted); font-size: 0.9em;">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
                                 </div>
                                 <div>
                                     ${holidayBadge}

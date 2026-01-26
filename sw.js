@@ -1,10 +1,10 @@
 const CACHE_NAME = 'my-time-tracker-v1';
 const urlsToCache = [
-  '/mytimetracker/',
-  '/mytimetracker/index.html',
-  '/mytimetracker/manifest.json',
-  '/mytimetracker/icon-192.png',
-  '/mytimetracker/icon-512.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 // Install event - cache resources

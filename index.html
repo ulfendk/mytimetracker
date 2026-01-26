@@ -1943,16 +1943,17 @@
     <script>
         if ('serviceWorker' in navigator) {
             let newWorker;
+            let refreshing = false;
             
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js')
                     .then((registration) => {
                         console.log('Service Worker registered successfully:', registration.scope);
                         
-                        // Check for updates periodically (every 60 seconds)
+                        // Check for updates periodically (every 5 minutes)
                         setInterval(() => {
                             registration.update();
-                        }, 60000);
+                        }, 300000);
 
                         // Detect when new service worker is waiting
                         registration.addEventListener('updatefound', () => {
@@ -1979,7 +1980,6 @@
                     });
 
                 // Reload page when new service worker takes control
-                let refreshing = false;
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
                     if (!refreshing) {
                         refreshing = true;

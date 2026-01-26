@@ -577,6 +577,14 @@
                         <div class="stat-value" id="weekTotal">0.0h</div>
                     </div>
                     <div class="stat">
+                        <div class="stat-label">Expected Hours</div>
+                        <div class="stat-value" id="weekExpected">37.5h</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Balance</div>
+                        <div class="stat-value" id="weekBalance">0.0h</div>
+                    </div>
+                    <div class="stat">
                         <div class="stat-label">Working Days</div>
                         <div class="stat-value" id="workingDays">0</div>
                     </div>
@@ -584,6 +592,11 @@
                         <div class="stat-label">Days Off</div>
                         <div class="stat-value" id="daysOff">0</div>
                     </div>
+                </div>
+                <div style="margin-top: 15px; display: flex; align-items: center; gap: 10px; justify-content: center;">
+                    <label for="expectedHoursInput" style="font-weight: 500;">Set Expected Hours for This Week:</label>
+                    <input type="number" id="expectedHoursInput" min="0" max="168" step="0.5" style="width: 80px; padding: 5px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary);">
+                    <button onclick="app.updateExpectedHours()" class="btn btn-primary" style="padding: 5px 15px;">Update</button>
                 </div>
             </div>
         </div>
@@ -679,7 +692,8 @@
                 const defaultData = { 
                     dates: {}, 
                     selectedCountry: '',
-                    holidays: {}
+                    holidays: {},
+                    weeklyExpectedHours: {}
                 };
                 return stored ? { ...defaultData, ...JSON.parse(stored) } : defaultData;
             }
@@ -711,6 +725,22 @@
                     dates.push(date);
                 }
                 return dates;
+            }
+
+            getWeekKey() {
+                return this.formatDate(this.currentWeekStart);
+            }
+
+            getExpectedHoursForWeek() {
+                const weekKey = this.getWeekKey();
+                return this.data.weeklyExpectedHours[weekKey] || 37.5; // Default: 5 days × 7.5 hours
+            }
+
+            setExpectedHoursForWeek(hours) {
+                const weekKey = this.getWeekKey();
+                this.data.weeklyExpectedHours[weekKey] = parseFloat(hours);
+                this.saveData();
+                this.renderSummary();
             }
 
             getDayData(dateStr) {
@@ -1243,6 +1273,7 @@
                 let daysOff = 0;
                 let weekendDays = 0;
                 const dailyBreakdown = [];
+                const weeklyExpectedHours = {};
 
                 monthDates.forEach(date => {
                     const dateStr = this.formatDate(date);
@@ -1270,18 +1301,71 @@
                             workingDays++;
                         }
                     }
+                    
+                    // Track expected hours by week
+                    const monday = this.getMonday(date);
+                    const weekKey = this.formatDate(monday);
+                    if (!weeklyExpectedHours[weekKey]) {
+                        weeklyExpectedHours[weekKey] = this.data.weeklyExpectedHours[weekKey] || 37.5;
+                    }
                 });
 
-                // Calculate expected hours (weekdays minus holidays)
+                // Calculate expected hours based on configured weekly values
+                // Sum up all unique weeks that have days in this month
+                let totalExpectedHours = 0;
+                const processedWeeks = new Set();
+                
+                monthDates.forEach(date => {
+                    if (!this.isWeekend(date)) {
+                        const dateStr = this.formatDate(date);
+                        const dayData = this.getDayData(dateStr);
+                        if (!dayData.isHoliday) {
+                            const monday = this.getMonday(date);
+                            const weekKey = this.formatDate(monday);
+                            
+                            if (!processedWeeks.has(weekKey)) {
+                                processedWeeks.add(weekKey);
+                                const weekExpected = this.data.weeklyExpectedHours[weekKey] || 37.5;
+                                
+                                // Count weekdays in this week that are in the current month
+                                const weekDates = [];
+                                for (let i = 0; i < 7; i++) {
+                                    const d = new Date(monday);
+                                    d.setDate(d.getDate() + i);
+                                    if (d.getMonth() === this.currentMonthDate.getMonth() && 
+                                        d.getFullYear() === this.currentMonthDate.getFullYear()) {
+                                        weekDates.push(d);
+                                    }
+                                }
+                                
+                                // Count working days in this week within the month
+                                let weekWorkingDays = 0;
+                                weekDates.forEach(d => {
+                                    if (!this.isWeekend(d)) {
+                                        const dStr = this.formatDate(d);
+                                        const dData = this.getDayData(dStr);
+                                        if (!dData.isHoliday) {
+                                            weekWorkingDays++;
+                                        }
+                                    }
+                                });
+                                
+                                // Add proportional expected hours for this week
+                                // Assume 5 working days per week as the baseline
+                                totalExpectedHours += (weekExpected / 5) * weekWorkingDays;
+                            }
+                        }
+                    }
+                });
+                
                 const totalWeekdays = monthDates.length - weekendDays;
                 const expectedWorkingDays = totalWeekdays - daysOff;
-                const expectedHours = expectedWorkingDays * this.expectedHoursPerDay;
-                const balance = totalActualHours - expectedHours;
+                const balance = totalActualHours - totalExpectedHours;
                 const avgHoursPerWorkingDay = workingDays > 0 ? totalActualHours / workingDays : 0;
 
                 return {
                     totalActualHours,
-                    expectedHours,
+                    expectedHours: totalExpectedHours,
                     balance,
                     workingDays,
                     daysOff,
@@ -1334,7 +1418,7 @@
                         </div>
                     </div>
                     <div style="text-align: center; color: var(--text-muted); font-size: 0.9em; margin-top: 10px;">
-                        Expected: ${stats.expectedWorkingDays} working days × ${this.expectedHoursPerDay}h/day
+                        Expected hours are calculated based on configured weekly expected hours
                     </div>
                 `;
 
@@ -1463,10 +1547,34 @@
             renderSummary() {
                 const weekTotal = this.calculateWeekTotal();
                 const stats = this.getWeekStats();
+                const expectedHours = this.getExpectedHoursForWeek();
+                const balance = weekTotal - expectedHours;
                 
                 document.getElementById('weekTotal').textContent = `${weekTotal.toFixed(1)}h`;
+                document.getElementById('weekExpected').textContent = `${expectedHours.toFixed(1)}h`;
+                
+                const balanceElement = document.getElementById('weekBalance');
+                balanceElement.textContent = `${balance >= 0 ? '+' : ''}${balance.toFixed(1)}h`;
+                balanceElement.style.color = balance >= 0 ? 'var(--success-color, #10b981)' : 'var(--danger-color, #ef4444)';
+                
                 document.getElementById('workingDays').textContent = stats.workingDays;
                 document.getElementById('daysOff').textContent = stats.daysOff;
+                
+                // Update the input field with current expected hours
+                const input = document.getElementById('expectedHoursInput');
+                if (input) {
+                    input.value = expectedHours;
+                }
+            }
+
+            updateExpectedHours() {
+                const input = document.getElementById('expectedHoursInput');
+                const hours = parseFloat(input.value);
+                if (isNaN(hours) || hours < 0) {
+                    alert('Please enter a valid number of hours');
+                    return;
+                }
+                this.setExpectedHoursForWeek(hours);
             }
         }
 

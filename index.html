@@ -818,14 +818,12 @@
                     'Europe/Zurich': 'CH',
                     'Asia/Tokyo': 'JP',
                     'Asia/Shanghai': 'CN',
-                    'Asia/Hong_Kong': 'HK',
                     'Asia/Singapore': 'SG',
                     'Australia/Sydney': 'AU',
                     'Pacific/Auckland': 'NZ',
                     'America/Toronto': 'CA',
                     'America/Vancouver': 'CA',
                     'Asia/Seoul': 'KR',
-                    'Asia/Kolkata': 'IN',
                 };
                 return timezoneToCountry[timezone] || '';
             }
@@ -865,22 +863,34 @@
                     const currentYear = new Date().getFullYear();
                     const years = [currentYear - 1, currentYear, currentYear + 1];
                     
-                    for (const year of years) {
+                    // Fetch all years concurrently for better performance
+                    const fetchPromises = years.map(async year => {
                         const cacheKey = `${countryCode}-${year}`;
                         if (this.data.holidays && this.data.holidays[cacheKey]) {
                             // Use cached holidays
-                            continue;
+                            return { year, cacheKey, holidays: null };
                         }
                         
                         const response = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`);
                         if (response.ok) {
                             const holidays = await response.json();
-                            if (!this.data.holidays) {
-                                this.data.holidays = {};
-                            }
+                            return { year, cacheKey, holidays };
+                        }
+                        return { year, cacheKey, holidays: null };
+                    });
+                    
+                    const results = await Promise.all(fetchPromises);
+                    
+                    // Store fetched holidays
+                    if (!this.data.holidays) {
+                        this.data.holidays = {};
+                    }
+                    
+                    results.forEach(({ cacheKey, holidays }) => {
+                        if (holidays) {
                             this.data.holidays[cacheKey] = holidays;
                         }
-                    }
+                    });
                     
                     this.saveData();
                     this.applyAutoHolidays();
@@ -907,7 +917,9 @@
                     const dateStr = holiday.date;
                     const dayData = this.getDayData(dateStr);
                     
-                    // Only auto-mark if not manually set
+                    // Only auto-mark if:
+                    // 1. Not already manually marked (isHoliday is false or autoMarked is true)
+                    // 2. Or if it was previously auto-marked (so we can update the name)
                     if (!dayData.isHoliday || dayData.autoMarked) {
                         dayData.isHoliday = true;
                         dayData.autoMarked = true;

@@ -533,7 +533,7 @@
 <body>
     <div class="container">
         <header>
-            <button class="theme-toggle" onclick="app.toggleTheme()" title="Toggle theme">🌓</button>
+            <button class="theme-toggle" onclick="app.toggleTheme()" title="Toggle theme" aria-label="Toggle light/dark theme" id="themeToggle">🌓</button>
             <h1>📊 My Time Tracker</h1>
             <p class="subtitle">Track your work hours with ease</p>
             <div class="country-selector">
@@ -634,16 +634,35 @@
             }
 
             initTheme() {
-                // Load theme preference from localStorage
-                const savedTheme = localStorage.getItem('theme') || 'light';
+                // Load theme preference from localStorage with error handling
+                let savedTheme = 'light';
+                try {
+                    savedTheme = localStorage.getItem('theme') || 'light';
+                } catch (e) {
+                    console.warn('localStorage not available, using default theme');
+                }
                 document.documentElement.setAttribute('data-theme', savedTheme);
+                this.updateThemeButton(savedTheme);
             }
 
             toggleTheme() {
                 const currentTheme = document.documentElement.getAttribute('data-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
                 document.documentElement.setAttribute('data-theme', newTheme);
-                localStorage.setItem('theme', newTheme);
+                try {
+                    localStorage.setItem('theme', newTheme);
+                } catch (e) {
+                    console.warn('Unable to save theme preference');
+                }
+                this.updateThemeButton(newTheme);
+            }
+
+            updateThemeButton(theme) {
+                const button = document.getElementById('themeToggle');
+                if (button) {
+                    button.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+                    button.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+                }
             }
 
             loadData() {

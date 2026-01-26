@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Time Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn-info {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+        }
+
+        .week-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 5px;
+        }
+
+        .week-selector button {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .week-selector button:hover {
+            background: #5568d3;
+        }
+
+        .week-info {
+            flex: 1;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .days-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .day-card {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+
+        .day-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .day-card.holiday {
+            background: #fff5f5;
+            border-color: #fc8181;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .day-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .day-total {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .holiday-badge {
+            background: #fc8181;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .intervals-container {
+            margin: 15px 0;
+        }
+
+        .interval {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 15px;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .interval-times {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .interval input {
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .interval-duration {
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .interval-break {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .interval-break input {
+            width: 80px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85em;
+            border-radius: 4px;
+        }
+
+        .day-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .summary h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .week-selector {
+                flex-direction: column;
+            }
+
+            .interval {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 My Time Tracker</h1>
+            <p class="subtitle">Track your work hours with ease</p>
+        </header>
+
+        <div class="main-content">
+            <div class="controls">
+                <button class="btn btn-secondary" onclick="app.exportData()">📥 Export Data</button>
+                <button class="btn btn-secondary" onclick="app.importData()">📤 Import Data</button>
+                <button class="btn btn-danger" onclick="app.clearAllData()">🗑️ Clear All Data</button>
+            </div>
+
+            <div class="week-selector">
+                <button onclick="app.previousWeek()">← Previous Week</button>
+                <div class="week-info" id="weekInfo"></div>
+                <button onclick="app.nextWeek()">Next Week →</button>
+            </div>
+
+            <div id="daysContainer" class="days-container"></div>
+
+            <div class="summary">
+                <h2>Weekly Summary</h2>
+                <div class="summary-stats">
+                    <div class="stat">
+                        <div class="stat-label">Total Hours</div>
+                        <div class="stat-value" id="weekTotal">0.0h</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Working Days</div>
+                        <div class="stat-value" id="workingDays">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Days Off</div>
+                        <div class="stat-value" id="daysOff">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Import Data</div>
+            <p style="margin-bottom: 15px;">Paste your exported JSON data below:</p>
+            <textarea id="importTextarea" placeholder='{"dates": {...}}'></textarea>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="app.confirmImport()">Import</button>
+                <button class="btn btn-secondary" onclick="app.closeImportModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" class="file-input" accept=".json" />
+
+    <script>
+        class TimeTracker {
+            constructor() {
+                this.data = this.loadData();
+                this.currentWeekStart = this.getMonday(new Date());
+                this.init();
+            }
+
+            init() {
+                this.render();
+            }
+
+            loadData() {
+                const stored = localStorage.getItem('timeTrackerData');
+                return stored ? JSON.parse(stored) : { dates: {} };
+            }
+
+            saveData() {
+                localStorage.setItem('timeTrackerData', JSON.stringify(this.data));
+            }
+
+            getMonday(date) {
+                const d = new Date(date);
+                const day = d.getDay();
+                const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+                return new Date(d.setDate(diff));
+            }
+
+            formatDate(date) {
+                return date.toISOString().split('T')[0];
+            }
+
+            parseDate(dateStr) {
+                return new Date(dateStr + 'T00:00:00');
+            }
+
+            getWeekDates() {
+                const dates = [];
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(this.currentWeekStart);
+                    date.setDate(date.getDate() + i);
+                    dates.push(date);
+                }
+                return dates;
+            }
+
+            getDayData(dateStr) {
+                if (!this.data.dates[dateStr]) {
+                    this.data.dates[dateStr] = {
+                        intervals: [],
+                        isHoliday: false
+                    };
+                }
+                return this.data.dates[dateStr];
+            }
+
+            addInterval(dateStr) {
+                const dayData = this.getDayData(dateStr);
+                dayData.intervals.push({
+                    start: '09:00',
+                    end: '17:00',
+                    break: 0
+                });
+                this.saveData();
+                this.render();
+            }
+
+            removeInterval(dateStr, index) {
+                const dayData = this.getDayData(dateStr);
+                dayData.intervals.splice(index, 1);
+                this.saveData();
+                this.render();
+            }
+
+            updateInterval(dateStr, index, field, value) {
+                const dayData = this.getDayData(dateStr);
+                if (dayData.intervals[index]) {
+                    dayData.intervals[index][field] = value;
+                    this.saveData();
+                    this.render();
+                }
+            }
+
+            toggleHoliday(dateStr) {
+                const dayData = this.getDayData(dateStr);
+                dayData.isHoliday = !dayData.isHoliday;
+                this.saveData();
+                this.render();
+            }
+
+            calculateIntervalHours(interval) {
+                if (!interval.start || !interval.end) return 0;
+                
+                const [startHour, startMin] = interval.start.split(':').map(Number);
+                const [endHour, endMin] = interval.end.split(':').map(Number);
+                
+                const startMinutes = startHour * 60 + startMin;
+                const endMinutes = endHour * 60 + endMin;
+                
+                const totalMinutes = endMinutes - startMinutes;
+                const breakMinutes = parseInt(interval.break) || 0;
+                
+                return Math.max(0, (totalMinutes - breakMinutes) / 60);
+            }
+
+            calculateDayTotal(dateStr) {
+                const dayData = this.getDayData(dateStr);
+                if (dayData.isHoliday) return 0;
+                
+                return dayData.intervals.reduce((total, interval) => {
+                    return total + this.calculateIntervalHours(interval);
+                }, 0);
+            }
+
+            calculateWeekTotal() {
+                const weekDates = this.getWeekDates();
+                return weekDates.reduce((total, date) => {
+                    return total + this.calculateDayTotal(this.formatDate(date));
+                }, 0);
+            }
+
+            getWeekStats() {
+                const weekDates = this.getWeekDates();
+                let workingDays = 0;
+                let daysOff = 0;
+
+                weekDates.forEach(date => {
+                    const dateStr = this.formatDate(date);
+                    const dayData = this.getDayData(dateStr);
+                    if (dayData.isHoliday) {
+                        daysOff++;
+                    } else if (dayData.intervals.length > 0) {
+                        workingDays++;
+                    }
+                });
+
+                return { workingDays, daysOff };
+            }
+
+            previousWeek() {
+                this.currentWeekStart.setDate(this.currentWeekStart.getDate() - 7);
+                this.render();
+            }
+
+            nextWeek() {
+                this.currentWeekStart.setDate(this.currentWeekStart.getDate() + 7);
+                this.render();
+            }
+
+            exportData() {
+                const dataStr = JSON.stringify(this.data, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `timetracker-export-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            importData() {
+                document.getElementById('importModal').classList.add('active');
+            }
+
+            confirmImport() {
+                const textarea = document.getElementById('importTextarea');
+                try {
+                    const imported = JSON.parse(textarea.value);
+                    if (imported.dates && typeof imported.dates === 'object') {
+                        this.data = imported;
+                        this.saveData();
+                        this.render();
+                        this.closeImportModal();
+                        alert('Data imported successfully!');
+                    } else {
+                        alert('Invalid data format. Please ensure the JSON has a "dates" property.');
+                    }
+                } catch (e) {
+                    alert('Error parsing JSON: ' + e.message);
+                }
+            }
+
+            closeImportModal() {
+                document.getElementById('importModal').classList.remove('active');
+                document.getElementById('importTextarea').value = '';
+            }
+
+            clearAllData() {
+                if (confirm('Are you sure you want to clear all data? This cannot be undone!')) {
+                    this.data = { dates: {} };
+                    this.saveData();
+                    this.render();
+                }
+            }
+
+            render() {
+                this.renderWeekInfo();
+                this.renderDays();
+                this.renderSummary();
+            }
+
+            renderWeekInfo() {
+                const weekDates = this.getWeekDates();
+                const startDate = weekDates[0];
+                const endDate = weekDates[6];
+                
+                const options = { month: 'short', day: 'numeric', year: 'numeric' };
+                const startStr = startDate.toLocaleDateString('en-US', options);
+                const endStr = endDate.toLocaleDateString('en-US', options);
+                
+                document.getElementById('weekInfo').textContent = `${startStr} - ${endStr}`;
+            }
+
+            renderDays() {
+                const container = document.getElementById('daysContainer');
+                const weekDates = this.getWeekDates();
+                const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                
+                container.innerHTML = weekDates.map((date, index) => {
+                    const dateStr = this.formatDate(date);
+                    const dayData = this.getDayData(dateStr);
+                    const dayTotal = this.calculateDayTotal(dateStr);
+                    
+                    return `
+                        <div class="day-card ${dayData.isHoliday ? 'holiday' : ''}">
+                            <div class="day-header">
+                                <div>
+                                    <div class="day-title">${dayNames[index]}</div>
+                                    <div style="color: #718096; font-size: 0.9em;">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                                </div>
+                                <div>
+                                    ${dayData.isHoliday ? '<span class="holiday-badge">Day Off</span>' : ''}
+                                    <div class="day-total">${dayTotal.toFixed(1)}h</div>
+                                </div>
+                            </div>
+                            
+                            <div class="intervals-container">
+                                ${dayData.intervals.map((interval, idx) => {
+                                    const hours = this.calculateIntervalHours(interval);
+                                    return `
+                                        <div class="interval">
+                                            <div class="interval-times">
+                                                <input type="time" value="${interval.start}" 
+                                                    onchange="app.updateInterval('${dateStr}', ${idx}, 'start', this.value)">
+                                                <span>to</span>
+                                                <input type="time" value="${interval.end}" 
+                                                    onchange="app.updateInterval('${dateStr}', ${idx}, 'end', this.value)">
+                                            </div>
+                                            <div class="interval-break">
+                                                <label>Break (min):</label>
+                                                <input type="number" min="0" value="${interval.break || 0}" 
+                                                    onchange="app.updateInterval('${dateStr}', ${idx}, 'break', this.value)">
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <span class="interval-duration">${hours.toFixed(1)}h</span>
+                                                <button class="btn btn-danger btn-small" 
+                                                    onclick="app.removeInterval('${dateStr}', ${idx})">Remove</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                            
+                            <div class="day-actions">
+                                <button class="btn btn-primary btn-small" 
+                                    onclick="app.addInterval('${dateStr}')">+ Add Interval</button>
+                                <button class="btn ${dayData.isHoliday ? 'btn-secondary' : 'btn-info'} btn-small" 
+                                    onclick="app.toggleHoliday('${dateStr}')">
+                                    ${dayData.isHoliday ? 'Unmark' : 'Mark as'} Day Off
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            renderSummary() {
+                const weekTotal = this.calculateWeekTotal();
+                const stats = this.getWeekStats();
+                
+                document.getElementById('weekTotal').textContent = `${weekTotal.toFixed(1)}h`;
+                document.getElementById('workingDays').textContent = stats.workingDays;
+                document.getElementById('daysOff').textContent = stats.daysOff;
+            }
+        }
+
+        // Initialize the app
+        const app = new TimeTracker();
+    </script>
+</body>
+</html>

@@ -13,10 +13,40 @@ A simple, browser-based work time tracking application that requires no backend.
 - 📥 Export data as JSON
 - 📤 Import previously exported data
 - 🧮 Automatic calculation of daily and weekly totals
+- 📱 **Progressive Web App (PWA) - Install on your phone or desktop**
 
 ## Live Demo
 
 The application is automatically deployed to GitHub Pages: [View Live Demo](https://ulfendk.github.io/mytimetracker/)
+
+## Progressive Web App (PWA)
+
+My Time Tracker can be installed as a Progressive Web App on your device for a native app-like experience:
+
+### Installation
+
+**On Desktop (Chrome, Edge, Brave):**
+1. Visit the [live demo](https://ulfendk.github.io/mytimetracker/)
+2. Click the install icon (⊕) in the address bar or look for "Install My Time Tracker" in the browser menu
+3. Click "Install" in the confirmation dialog
+
+**On Mobile (iOS Safari):**
+1. Visit the [live demo](https://ulfendk.github.io/mytimetracker/)
+2. Tap the Share button (box with arrow pointing up)
+3. Scroll down and tap "Add to Home Screen"
+4. Tap "Add"
+
+**On Mobile (Android Chrome):**
+1. Visit the [live demo](https://ulfendk.github.io/mytimetracker/)
+2. Tap the three-dot menu
+3. Tap "Add to Home screen" or "Install app"
+4. Tap "Install"
+
+### PWA Benefits
+- **Offline Access**: Works without internet connection once installed
+- **Native Feel**: Runs in standalone mode without browser UI
+- **Quick Access**: Launch from home screen or desktop
+- **Automatic Updates**: Always get the latest version when online
 
 ## Usage
 
@@ -61,6 +91,7 @@ The monthly overview automatically:
 - **Data Storage**: Uses browser's localStorage API
 - **Data Format**: JSON
 - **Responsive Design**: Works on desktop and mobile devices
+- **Progressive Web App**: Installable with offline support via Service Worker
 - **Deployment**: Automatically deployed to GitHub Pages on PR merge to main branch
 
 ## Browser Compatibility

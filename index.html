@@ -538,6 +538,7 @@
             }
         }
     </style>
+    <script src="https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -557,6 +558,7 @@
             <div class="controls">
                 <button class="btn btn-primary" onclick="app.showMonthlyOverview()">📅 Monthly Overview</button>
                 <button class="btn btn-secondary" onclick="app.exportData()">📤 Save Data</button>
+                <button class="btn btn-secondary" onclick="app.exportToExcel()">📊 Export to Excel</button>
                 <button class="btn btn-secondary" onclick="app.importData()">📥 Load Data</button>
                 <button class="btn btn-danger" onclick="app.clearAllData()">🗑️ Clear All Data</button>
             </div>
@@ -1185,6 +1187,126 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+            }
+
+            exportToExcel() {
+                // Check if XLSX library is loaded
+                if (typeof XLSX === 'undefined') {
+                    alert('Excel export library is not loaded. Please check your internet connection and try again.');
+                    return;
+                }
+
+                // Create a new workbook
+                const wb = XLSX.utils.book_new();
+                
+                // Get monthly stats for the current month
+                const stats = this.calculateMonthlyStats();
+                const monthName = this.currentMonthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                
+                // Sheet 1: Summary
+                const summaryData = [
+                    ['My Time Tracker - Monthly Summary'],
+                    ['Month', monthName],
+                    [],
+                    ['Metric', 'Value'],
+                    ['Total Actual Hours', stats.totalActualHours.toFixed(2)],
+                    ['Expected Hours', stats.expectedHours.toFixed(2)],
+                    ['Balance', stats.balance.toFixed(2)],
+                    ['Working Days', stats.workingDays],
+                    ['Days Off', stats.daysOff],
+                    ['Weekend Days', stats.weekendDays],
+                    ['Average Hours per Working Day', stats.avgHoursPerWorkingDay.toFixed(2)]
+                ];
+                const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+                XLSX.utils.book_append_sheet(wb, summaryWs, 'Summary');
+                
+                // Sheet 2: Daily Details
+                const dailyDetailsData = [
+                    ['Date', 'Day', 'Start Time', 'End Time', 'Break (min)', 'Hours', 'Total Hours', 'Holiday']
+                ];
+                
+                stats.dailyBreakdown.forEach(day => {
+                    const dateStr = day.dateStr;
+                    const dayData = this.getDayData(dateStr);
+                    const dayName = day.date.toLocaleDateString('en-US', { weekday: 'short' });
+                    
+                    if (dayData.intervals.length > 0) {
+                        dayData.intervals.forEach((interval, idx) => {
+                            const hours = this.calculateIntervalHours(interval);
+                            dailyDetailsData.push([
+                                idx === 0 ? day.dateStr : '',
+                                idx === 0 ? dayName : '',
+                                interval.start || '',
+                                interval.end || '',
+                                interval.break || 0,
+                                hours.toFixed(2),
+                                idx === 0 ? day.hours.toFixed(2) : '',
+                                idx === 0 ? (day.isHoliday ? 'Yes' : '') : ''
+                            ]);
+                        });
+                    } else if (day.isHoliday || day.hours === 0) {
+                        dailyDetailsData.push([
+                            day.dateStr,
+                            dayName,
+                            '',
+                            '',
+                            '',
+                            '',
+                            day.hours.toFixed(2),
+                            day.isHoliday ? 'Yes' : ''
+                        ]);
+                    }
+                });
+                const dailyWs = XLSX.utils.aoa_to_sheet(dailyDetailsData);
+                XLSX.utils.book_append_sheet(wb, dailyWs, 'Daily Details');
+                
+                // Sheet 3: Weekly Breakdown
+                const weeklyData = [
+                    ['Week Starting', 'Expected Hours', 'Actual Hours', 'Balance']
+                ];
+                
+                // Group data by week
+                const weeklyGroups = {};
+                stats.dailyBreakdown.forEach(day => {
+                    const monday = this.getMonday(day.date);
+                    const weekKey = this.formatDate(monday);
+                    
+                    if (!weeklyGroups[weekKey]) {
+                        weeklyGroups[weekKey] = {
+                            weekStart: monday,
+                            actualHours: 0,
+                            workingDays: 0
+                        };
+                    }
+                    
+                    if (!day.isWeekend && !day.isHoliday) {
+                        weeklyGroups[weekKey].actualHours += day.hours;
+                        if (day.hours > 0) {
+                            weeklyGroups[weekKey].workingDays++;
+                        }
+                    }
+                });
+                
+                // Sort by week start date and add to sheet
+                Object.keys(weeklyGroups).sort().forEach(weekKey => {
+                    const week = weeklyGroups[weekKey];
+                    const expectedHours = this.data.weeklyExpectedHours[weekKey] || 37.5;
+                    const balance = week.actualHours - expectedHours;
+                    
+                    weeklyData.push([
+                        this.formatDate(week.weekStart),
+                        expectedHours.toFixed(2),
+                        week.actualHours.toFixed(2),
+                        balance.toFixed(2)
+                    ]);
+                });
+                
+                const weeklyWs = XLSX.utils.aoa_to_sheet(weeklyData);
+                XLSX.utils.book_append_sheet(wb, weeklyWs, 'Weekly Breakdown');
+                
+                // Generate Excel file and trigger download
+                const fileName = `timetracker-${monthName.replace(/\s+/g, '-')}.xlsx`;
+                XLSX.writeFile(wb, fileName);
             }
 
             importData() {

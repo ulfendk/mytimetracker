@@ -1,10 +1,11 @@
-const CACHE_NAME = 'my-time-tracker-v1';
+const CACHE_NAME = 'my-time-tracker-v2';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  'https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js'
 ];
 
 // Install event - cache resources

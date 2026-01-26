@@ -4,8 +4,8 @@ A simple, browser-based work time tracking application that requires no backend.
 
 ## Features
 
-- 📊 Track multiple work intervals per day
-- ⏰ Record break times for each interval
+- 📊 Track multiple work time entries per day
+- ⏰ Record break times for each work time entry
 - 📅 View and manage work hours by week
 - 📆 Monthly overview with balance tracking (actual vs expected hours)
 - 🏖️ Mark days off and holidays
@@ -53,8 +53,8 @@ My Time Tracker can be installed as a Progressive Web App on your device for a n
 
 1. Open `index.html` in your web browser or use the live demo
 2. Navigate between weeks using the Previous/Next Week buttons
-3. For each day, add work intervals by clicking "Add Interval"
-4. Set start time, end time, and break duration for each interval
+3. For each day, add work time entries by clicking "Add Work time"
+4. Set start time, end time, and break duration for each work time entry
 5. Mark days off/holidays using the "Mark as Day Off" button
 6. View your weekly summary at the bottom of the page
 7. Click "Monthly Overview" to see monthly statistics and balance tracking
@@ -82,9 +82,9 @@ Click the "Export to Excel" button to download a comprehensive monthly report as
 
 2. **Daily Details Sheet**: Complete breakdown of all days in the month
    - Date and day of the week
-   - Start and end times for each work interval
+   - Start and end times for each work time entry
    - Break duration in minutes
-   - Hours worked per interval
+   - Hours worked per work time entry
    - Total hours per day
    - Holiday indicators
 

@@ -342,6 +342,73 @@
             display: none;
         }
 
+        .monthly-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .monthly-stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .monthly-stat-card.positive {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .monthly-stat-card.negative {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+
+        .monthly-stat-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .monthly-stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .daily-breakdown {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f7fafc;
+            border-radius: 5px;
+            padding: 15px;
+        }
+
+        .daily-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .daily-row:last-child {
+            border-bottom: none;
+        }
+
+        .daily-date {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .daily-hours {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .daily-hours.holiday {
+            color: #fc8181;
+        }
+
         @media (max-width: 768px) {
             .controls {
                 flex-direction: column;
@@ -370,6 +437,7 @@
 
         <div class="main-content">
             <div class="controls">
+                <button class="btn btn-primary" onclick="app.showMonthlyOverview()">📅 Monthly Overview</button>
                 <button class="btn btn-secondary" onclick="app.exportData()">📥 Export Data</button>
                 <button class="btn btn-secondary" onclick="app.importData()">📤 Import Data</button>
                 <button class="btn btn-danger" onclick="app.clearAllData()">🗑️ Clear All Data</button>
@@ -403,6 +471,27 @@
         </div>
     </div>
 
+    <!-- Monthly Overview Modal -->
+    <div id="monthlyModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">Monthly Overview</div>
+            
+            <div class="week-selector" style="margin-bottom: 20px;">
+                <button onclick="app.previousMonth()">← Previous Month</button>
+                <div class="week-info" id="monthInfo" style="font-size: 1.3em;"></div>
+                <button onclick="app.nextMonth()">Next Month →</button>
+            </div>
+
+            <div id="monthlyStats" style="margin: 20px 0;"></div>
+            
+            <div id="monthlyDetails" style="margin-top: 20px;"></div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="app.closeMonthlyModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Import Modal -->
     <div id="importModal" class="modal">
         <div class="modal-content">
@@ -423,6 +512,8 @@
             constructor() {
                 this.data = this.loadData();
                 this.currentWeekStart = this.getMonday(new Date());
+                this.currentMonthDate = new Date();
+                this.expectedHoursPerDay = 7.5; // Standard work day
                 this.init();
             }
 
@@ -613,6 +704,179 @@
                     this.saveData();
                     this.render();
                 }
+            }
+
+            showMonthlyOverview() {
+                this.currentMonthDate = new Date();
+                this.renderMonthlyOverview();
+                document.getElementById('monthlyModal').classList.add('active');
+            }
+
+            closeMonthlyModal() {
+                document.getElementById('monthlyModal').classList.remove('active');
+            }
+
+            previousMonth() {
+                this.currentMonthDate.setMonth(this.currentMonthDate.getMonth() - 1);
+                this.renderMonthlyOverview();
+            }
+
+            nextMonth() {
+                this.currentMonthDate.setMonth(this.currentMonthDate.getMonth() + 1);
+                this.renderMonthlyOverview();
+            }
+
+            getMonthDates(date) {
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                
+                const dates = [];
+                for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+                    dates.push(new Date(d));
+                }
+                return dates;
+            }
+
+            isWeekend(date) {
+                const day = date.getDay();
+                return day === 0 || day === 6; // Sunday or Saturday
+            }
+
+            calculateMonthlyStats() {
+                const monthDates = this.getMonthDates(this.currentMonthDate);
+                let totalActualHours = 0;
+                let workingDays = 0;
+                let daysOff = 0;
+                let weekendDays = 0;
+                const dailyBreakdown = [];
+
+                monthDates.forEach(date => {
+                    const dateStr = this.formatDate(date);
+                    const dayData = this.getDayData(dateStr);
+                    const dayTotal = this.calculateDayTotal(dateStr);
+                    const isWeekend = this.isWeekend(date);
+
+                    if (isWeekend) {
+                        weekendDays++;
+                    }
+
+                    dailyBreakdown.push({
+                        date: date,
+                        dateStr: dateStr,
+                        hours: dayTotal,
+                        isHoliday: dayData.isHoliday,
+                        isWeekend: isWeekend
+                    });
+
+                    if (dayData.isHoliday) {
+                        daysOff++;
+                    } else if (!isWeekend) {
+                        totalActualHours += dayTotal;
+                        if (dayTotal > 0) {
+                            workingDays++;
+                        }
+                    }
+                });
+
+                // Calculate expected hours (weekdays minus holidays)
+                const totalWeekdays = monthDates.length - weekendDays;
+                const expectedWorkingDays = totalWeekdays - daysOff;
+                const expectedHours = expectedWorkingDays * this.expectedHoursPerDay;
+                const balance = totalActualHours - expectedHours;
+                const avgHoursPerWorkingDay = workingDays > 0 ? totalActualHours / workingDays : 0;
+
+                return {
+                    totalActualHours,
+                    expectedHours,
+                    balance,
+                    workingDays,
+                    daysOff,
+                    weekendDays,
+                    expectedWorkingDays,
+                    avgHoursPerWorkingDay,
+                    dailyBreakdown
+                };
+            }
+
+            renderMonthlyOverview() {
+                const stats = this.calculateMonthlyStats();
+                
+                // Update month info
+                const monthYear = this.currentMonthDate.toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+                document.getElementById('monthInfo').textContent = monthYear;
+
+                // Render statistics
+                const balanceClass = stats.balance >= 0 ? 'positive' : 'negative';
+                const balanceSign = stats.balance >= 0 ? '+' : '';
+                
+                document.getElementById('monthlyStats').innerHTML = `
+                    <div class="monthly-stats-grid">
+                        <div class="monthly-stat-card">
+                            <div class="monthly-stat-label">Actual Hours</div>
+                            <div class="monthly-stat-value">${stats.totalActualHours.toFixed(1)}h</div>
+                        </div>
+                        <div class="monthly-stat-card">
+                            <div class="monthly-stat-label">Expected Hours</div>
+                            <div class="monthly-stat-value">${stats.expectedHours.toFixed(1)}h</div>
+                        </div>
+                        <div class="monthly-stat-card ${balanceClass}">
+                            <div class="monthly-stat-label">Balance</div>
+                            <div class="monthly-stat-value">${balanceSign}${stats.balance.toFixed(1)}h</div>
+                        </div>
+                        <div class="monthly-stat-card">
+                            <div class="monthly-stat-label">Working Days</div>
+                            <div class="monthly-stat-value">${stats.workingDays}</div>
+                        </div>
+                        <div class="monthly-stat-card">
+                            <div class="monthly-stat-label">Days Off</div>
+                            <div class="monthly-stat-value">${stats.daysOff}</div>
+                        </div>
+                        <div class="monthly-stat-card">
+                            <div class="monthly-stat-label">Avg per Day</div>
+                            <div class="monthly-stat-value">${stats.avgHoursPerWorkingDay.toFixed(1)}h</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; color: #718096; font-size: 0.9em; margin-top: 10px;">
+                        Expected: ${stats.expectedWorkingDays} working days × ${this.expectedHoursPerDay}h/day
+                    </div>
+                `;
+
+                // Render daily breakdown
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                const breakdown = stats.dailyBreakdown
+                    .filter(day => day.hours > 0 || day.isHoliday)
+                    .map(day => {
+                        const dayName = dayNames[day.date.getDay()];
+                        const dateStr = day.date.toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                        });
+                        const hoursClass = day.isHoliday ? 'holiday' : '';
+                        const hoursText = day.isHoliday ? 'Day Off' : `${day.hours.toFixed(1)}h`;
+                        
+                        return `
+                            <div class="daily-row">
+                                <span class="daily-date">${dayName}, ${dateStr}</span>
+                                <span class="daily-hours ${hoursClass}">${hoursText}</span>
+                            </div>
+                        `;
+                    }).join('');
+
+                document.getElementById('monthlyDetails').innerHTML = breakdown ? `
+                    <h3 style="margin-bottom: 10px; color: #2d3748;">Daily Breakdown</h3>
+                    <div class="daily-breakdown">
+                        ${breakdown}
+                    </div>
+                ` : `
+                    <div style="text-align: center; color: #718096; padding: 20px;">
+                        No work hours recorded for this month
+                    </div>
+                `;
             }
 
             render() {

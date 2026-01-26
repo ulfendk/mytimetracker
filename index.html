@@ -906,7 +906,43 @@
                 this.initTheme();
                 this.initPWA();
                 this.loadAvailableCountries();
+                this.initFileInput();
                 this.render();
+            }
+
+            initFileInput() {
+                const fileInput = document.getElementById('fileInput');
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            try {
+                                const imported = JSON.parse(event.target.result);
+                                if (imported.dates && typeof imported.dates === 'object') {
+                                    // Merge imported data with default structure to ensure all required properties exist
+                                    const defaultData = { 
+                                        dates: {}, 
+                                        selectedCountry: '',
+                                        holidays: {},
+                                        weeklyExpectedHours: {}
+                                    };
+                                    this.data = { ...defaultData, ...imported };
+                                    this.saveData();
+                                    this.render();
+                                    alert('Data imported successfully!');
+                                } else {
+                                    alert('Invalid data format. Please ensure the JSON has a "dates" property.');
+                                }
+                            } catch (e) {
+                                alert('Error parsing JSON: ' + e.message);
+                            }
+                            // Reset file input so the same file can be selected again
+                            fileInput.value = '';
+                        };
+                        reader.readAsText(file);
+                    }
+                });
             }
 
             initPWA() {
@@ -1651,7 +1687,8 @@
             }
 
             importData() {
-                document.getElementById('importModal').classList.add('active');
+                // Trigger file input dialog
+                document.getElementById('fileInput').click();
             }
 
             confirmImport() {

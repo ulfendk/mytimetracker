@@ -647,6 +647,32 @@
             opacity: 0.9;
         }
 
+        .expected-hours-control {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .expected-hours-control label {
+            font-weight: 500;
+        }
+
+        .expected-hours-control input {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .expected-hours-control button {
+            padding: 5px 15px;
+        }
+
         @media (max-width: 768px) {
             .controls {
                 flex-direction: column;
@@ -662,6 +688,73 @@
 
             .interval {
                 grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 20px 15px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-top: 10px;
+            }
+
+            .theme-toggle {
+                right: 10px;
+                top: 10px;
+                padding: 6px 12px;
+                font-size: 1em;
+            }
+
+            .settings-toggle {
+                right: 10px;
+                top: 50px;
+                padding: 6px 12px;
+                font-size: 1em;
+            }
+
+            .main-content {
+                padding: 20px 15px;
+            }
+
+            .summary-stats {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 10px;
+            }
+
+            .stat {
+                padding: 15px 10px;
+            }
+
+            .stat-value {
+                font-size: 1.5em;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+
+            .monthly-stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .expected-hours-control {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+
+            .expected-hours-control input {
+                width: 100%;
+                max-width: 150px;
+                margin: 0 auto;
+            }
+
+            .expected-hours-control button {
+                width: 100%;
+                max-width: 150px;
+                margin: 0 auto;
             }
         }
     </style>
@@ -723,10 +816,10 @@
                         <div class="stat-value" id="daysOff">0</div>
                     </div>
                 </div>
-                <div style="margin-top: 15px; display: flex; align-items: center; gap: 10px; justify-content: center;">
-                    <label for="expectedHoursInput" style="font-weight: 500;">Set Expected Hours for This Week:</label>
-                    <input type="number" id="expectedHoursInput" min="0" max="168" step="0.5" style="width: 80px; padding: 5px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-secondary); color: var(--text-primary);">
-                    <button onclick="app.updateExpectedHours()" class="btn btn-primary" style="padding: 5px 15px;">Update</button>
+                <div class="expected-hours-control">
+                    <label for="expectedHoursInput">Set Expected Hours for This Week:</label>
+                    <input type="number" id="expectedHoursInput" min="0" max="168" step="0.5">
+                    <button onclick="app.updateExpectedHours()" class="btn btn-primary">Update</button>
                 </div>
             </div>
         </div>

@@ -887,8 +887,19 @@
             }
 
             applyUpdate() {
-                // Reload the page to apply the update
-                window.location.reload();
+                // Send skip waiting message to activate the new service worker
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.getRegistration().then((registration) => {
+                        if (registration && registration.waiting) {
+                            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        } else {
+                            // If no waiting worker, just reload
+                            window.location.reload();
+                        }
+                    });
+                } else {
+                    window.location.reload();
+                }
             }
 
             initTheme() {

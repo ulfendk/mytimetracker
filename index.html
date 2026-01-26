@@ -645,6 +645,7 @@
                 this.currentWeekStart = this.getMonday(new Date());
                 this.currentMonthDate = new Date();
                 this.expectedHoursPerDay = 7.5; // Standard work day
+                this.workingDaysPerWeek = 5; // Default working days per week (Mon-Fri)
                 this.availableCountries = [];
                 this.init();
             }
@@ -733,7 +734,8 @@
 
             getExpectedHoursForWeek() {
                 const weekKey = this.getWeekKey();
-                return this.data.weeklyExpectedHours[weekKey] || 37.5; // Default: 5 days × 7.5 hours
+                const defaultExpectedHours = this.workingDaysPerWeek * this.expectedHoursPerDay;
+                return this.data.weeklyExpectedHours[weekKey] || defaultExpectedHours;
             }
 
             setExpectedHoursForWeek(hours) {
@@ -1351,8 +1353,8 @@
                                 });
                                 
                                 // Add proportional expected hours for this week
-                                // Assume 5 working days per week as the baseline
-                                totalExpectedHours += (weekExpected / 5) * weekWorkingDays;
+                                // Based on configured working days per week
+                                totalExpectedHours += (weekExpected / this.workingDaysPerWeek) * weekWorkingDays;
                             }
                         }
                     }

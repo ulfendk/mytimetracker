@@ -13,9 +13,13 @@ A simple, browser-based work time tracking application that requires no backend.
 - 📤 Import previously exported data
 - 🧮 Automatic calculation of daily and weekly totals
 
+## Live Demo
+
+The application is automatically deployed to GitHub Pages: [View Live Demo](https://ulfendk.github.io/mytimetracker/)
+
 ## Usage
 
-1. Open `index.html` in your web browser
+1. Open `index.html` in your web browser or use the live demo
 2. Navigate between weeks using the Previous/Next Week buttons
 3. For each day, add work intervals by clicking "Add Interval"
 4. Set start time, end time, and break duration for each interval
@@ -42,6 +46,7 @@ Use the "Clear All Data" button to reset the application (requires confirmation)
 - **Data Storage**: Uses browser's localStorage API
 - **Data Format**: JSON
 - **Responsive Design**: Works on desktop and mobile devices
+- **Deployment**: Automatically deployed to GitHub Pages on PR merge to main branch
 
 ## Browser Compatibility
 

@@ -1305,7 +1305,7 @@
                 XLSX.utils.book_append_sheet(wb, weeklyWs, 'Weekly Breakdown');
                 
                 // Generate Excel file and trigger download
-                const fileName = `timetracker-${monthName.replace(' ', '-')}.xlsx`;
+                const fileName = `timetracker-${monthName.replace(/\s+/g, '-')}.xlsx`;
                 XLSX.writeFile(wb, fileName);
             }
 

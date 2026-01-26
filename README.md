@@ -10,8 +10,8 @@ A simple, browser-based work time tracking application that requires no backend.
 - 📆 Monthly overview with balance tracking (actual vs expected hours)
 - 🏖️ Mark days off and holidays
 - 💾 All data stored in browser (localStorage)
-- 📥 Export data as JSON
-- 📤 Import previously exported data
+- 📥 Save data as JSON
+- 📤 Load previously saved data
 - 🧮 Automatic calculation of daily and weekly totals
 - 📱 **Progressive Web App (PWA) - Install on your phone or desktop**
 
@@ -60,14 +60,14 @@ My Time Tracker can be installed as a Progressive Web App on your device for a n
 
 ## Data Management
 
-### Export Data
-Click the "Export Data" button to download your time tracking data as a JSON file. This allows you to:
+### Save Data
+Click the "Save Data" button to download your time tracking data as a JSON file. This allows you to:
 - Back up your data
 - Share data between different browsers
 - Archive historical records
 
-### Import Data
-Click the "Import Data" button and paste your previously exported JSON data to restore it.
+### Load Data
+Click the "Load Data" button and paste your previously saved JSON data to restore it.
 
 ### Clear Data
 Use the "Clear All Data" button to reset the application (requires confirmation).

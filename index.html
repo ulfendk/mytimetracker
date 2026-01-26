@@ -556,8 +556,8 @@
         <div class="main-content">
             <div class="controls">
                 <button class="btn btn-primary" onclick="app.showMonthlyOverview()">📅 Monthly Overview</button>
-                <button class="btn btn-secondary" onclick="app.exportData()">📥 Export Data</button>
-                <button class="btn btn-secondary" onclick="app.importData()">📤 Import Data</button>
+                <button class="btn btn-secondary" onclick="app.exportData()">📥 Save Data</button>
+                <button class="btn btn-secondary" onclick="app.importData()">📤 Load Data</button>
                 <button class="btn btn-danger" onclick="app.clearAllData()">🗑️ Clear All Data</button>
             </div>
 
@@ -613,11 +613,11 @@
     <!-- Import Modal -->
     <div id="importModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">Import Data</div>
-            <p style="margin-bottom: 15px;">Paste your exported JSON data below:</p>
+            <div class="modal-header">Load Data</div>
+            <p style="margin-bottom: 15px;">Paste your saved JSON data below:</p>
             <textarea id="importTextarea" placeholder='{"dates": {...}}'></textarea>
             <div class="modal-actions">
-                <button class="btn btn-primary" onclick="app.confirmImport()">Import</button>
+                <button class="btn btn-primary" onclick="app.confirmImport()">Load</button>
                 <button class="btn btn-secondary" onclick="app.closeImportModal()">Cancel</button>
             </div>
         </div>

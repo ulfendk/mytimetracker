@@ -1152,12 +1152,14 @@
                 this.render();
             }
 
-            updateInterval(dateStr, index, field, value) {
+            updateInterval(dateStr, index, field, value, skipRender = false) {
                 const dayData = this.getDayData(dateStr);
                 if (dayData.intervals[index]) {
                     dayData.intervals[index][field] = value;
                     this.saveData();
-                    this.render();
+                    if (!skipRender) {
+                        this.render();
+                    }
                 }
             }
 
@@ -2013,10 +2015,12 @@
                                         <div class="interval">
                                             <div class="interval-times">
                                                 <input type="time" value="${interval.start}" 
-                                                    onchange="app.updateInterval('${dateStr}', ${idx}, 'start', this.value)">
+                                                    oninput="app.updateInterval('${dateStr}', ${idx}, 'start', this.value, true)"
+                                                    onblur="app.updateInterval('${dateStr}', ${idx}, 'start', this.value)">
                                                 <span>to</span>
                                                 <input type="time" value="${interval.end}" 
-                                                    onchange="app.updateInterval('${dateStr}', ${idx}, 'end', this.value)">
+                                                    oninput="app.updateInterval('${dateStr}', ${idx}, 'end', this.value, true)"
+                                                    onblur="app.updateInterval('${dateStr}', ${idx}, 'end', this.value)">
                                             </div>
                                             <div class="interval-break">
                                                 <label>Break (min):</label>

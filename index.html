@@ -1382,14 +1382,25 @@
             }
 
             loadData() {
-                const stored = localStorage.getItem('timeTrackerData');
-                const defaultData = { 
-                    dates: {}, 
-                    selectedCountry: '',
-                    holidays: {},
-                    weeklyExpectedHours: {}
-                };
-                return stored ? { ...defaultData, ...JSON.parse(stored) } : defaultData;
+                try {
+                    const stored = localStorage.getItem('timeTrackerData');
+                    const defaultData = { 
+                        dates: {}, 
+                        selectedCountry: '',
+                        holidays: {},
+                        weeklyExpectedHours: {}
+                    };
+                    return stored ? { ...defaultData, ...JSON.parse(stored) } : defaultData;
+                } catch (e) {
+                    console.error('Error loading data from localStorage:', e);
+                    // Return default data if parsing fails
+                    return { 
+                        dates: {}, 
+                        selectedCountry: '',
+                        holidays: {},
+                        weeklyExpectedHours: {}
+                    };
+                }
             }
 
             saveData() {

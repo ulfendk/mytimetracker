@@ -2,6 +2,8 @@
 
 A simple, browser-based work time tracking application that requires no backend. All data is stored locally in your browser.
 
+> 🆕 **New Feature**: [Cloud Auto-Save](QUICK_START.md) - Automatically backup your data to Google Drive! See the [Quick Start Guide](QUICK_START.md) to get started.
+
 ## Features
 
 - 📊 Track multiple work time entries per day

@@ -94,7 +94,7 @@ If you prefer manual control or want to use a different cloud service (iCloud, D
 2. Upload the JSON file to your preferred cloud storage
 3. Access from any device by downloading and using "Load Data"
 
-**Note:** Cloud Auto-Save requires Google API credentials to be configured. If not configured, the app will guide you through manual backup options.
+**Note:** Cloud Auto-Save requires Google API credentials to be configured. See [Cloud Sync Setup Guide](CLOUD_SYNC_SETUP.md) for detailed instructions. If not configured, the app will guide you through manual backup options.
 
 ### Export to Excel
 Click the "Export to Excel" button to download a comprehensive monthly report as an Excel (.xlsx) file. The exported file contains three sheets:

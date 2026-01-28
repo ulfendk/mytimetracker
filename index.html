@@ -234,6 +234,11 @@
             box-shadow: var(--shadow-md);
         }
 
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+
         .week-selector {
             display: flex;
             align-items: center;
@@ -759,6 +764,8 @@
         }
     </style>
     <script src="https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
     <div class="container">
@@ -883,6 +890,23 @@
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
+                <div class="settings-option">
+                    <div class="settings-label">
+                        <div class="settings-label-title">Cloud Auto-Save</div>
+                        <div class="settings-label-desc">Automatically save your data to Google Drive</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="cloudSyncToggle" onchange="app.toggleCloudSync(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div id="cloudSyncStatus" class="settings-option" style="display: none;">
+                    <div class="settings-label">
+                        <div class="settings-label-title">Cloud Sync Status</div>
+                        <div class="settings-label-desc" id="cloudSyncStatusText">Not connected</div>
+                    </div>
+                    <button class="btn btn-sm btn-secondary" id="cloudSyncButton" onclick="app.manualCloudSync()">Sync Now</button>
+                </div>
             </div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="app.closeSettingsModal()">Close</button>
@@ -905,6 +929,7 @@
             init() {
                 this.initTheme();
                 this.initPWA();
+                this.initCloudSync();
                 this.loadAvailableCountries();
                 this.initFileInput();
                 this.render();
@@ -1001,6 +1026,307 @@
                 this.setAutoUpdateSetting(enabled);
             }
 
+            // Cloud Sync Methods
+            initCloudSync() {
+                // Google Drive API configuration
+                this.GOOGLE_CLIENT_ID = ''; // Users need to configure this
+                this.GOOGLE_API_KEY = ''; // Users need to configure this
+                this.GOOGLE_DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
+                this.GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.file';
+                
+                // Load cloud sync preference
+                const cloudSyncEnabled = this.getCloudSyncSetting();
+                const toggle = document.getElementById('cloudSyncToggle');
+                if (toggle) {
+                    toggle.checked = cloudSyncEnabled;
+                }
+                
+                // Initialize Google API if cloud sync is enabled
+                if (cloudSyncEnabled && this.GOOGLE_CLIENT_ID && this.GOOGLE_API_KEY) {
+                    this.loadGoogleAPI();
+                }
+                
+                // Update UI based on cloud sync status
+                this.updateCloudSyncUI();
+            }
+
+            getCloudSyncSetting() {
+                try {
+                    const setting = localStorage.getItem('cloudSyncEnabled');
+                    return setting === 'true';
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            setCloudSyncSetting(enabled) {
+                try {
+                    localStorage.setItem('cloudSyncEnabled', enabled.toString());
+                } catch (e) {
+                    console.warn('Unable to save cloud sync preference');
+                }
+            }
+
+            getGoogleAccessToken() {
+                try {
+                    return localStorage.getItem('googleAccessToken');
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            setGoogleAccessToken(token) {
+                try {
+                    if (token) {
+                        localStorage.setItem('googleAccessToken', token);
+                    } else {
+                        localStorage.removeItem('googleAccessToken');
+                    }
+                } catch (e) {
+                    console.warn('Unable to save Google access token');
+                }
+            }
+
+            loadGoogleAPI() {
+                // Load Google API client
+                if (typeof gapi !== 'undefined') {
+                    gapi.load('client:auth2', () => {
+                        this.initGoogleClient();
+                    });
+                }
+            }
+
+            initGoogleClient() {
+                if (!this.GOOGLE_CLIENT_ID || !this.GOOGLE_API_KEY) {
+                    console.warn('Google API credentials not configured');
+                    this.updateCloudSyncStatus('Not configured', 'error');
+                    return;
+                }
+
+                gapi.client.init({
+                    apiKey: this.GOOGLE_API_KEY,
+                    clientId: this.GOOGLE_CLIENT_ID,
+                    discoveryDocs: this.GOOGLE_DISCOVERY_DOCS,
+                    scope: this.GOOGLE_SCOPES
+                }).then(() => {
+                    // Listen for sign-in state changes
+                    gapi.auth2.getAuthInstance().isSignedIn.listen((isSignedIn) => {
+                        this.updateCloudSyncUI(isSignedIn);
+                    });
+
+                    // Handle initial sign-in state
+                    const isSignedIn = gapi.auth2.getAuthInstance().isSignedIn.get();
+                    this.updateCloudSyncUI(isSignedIn);
+                    
+                    if (isSignedIn) {
+                        this.updateCloudSyncStatus('Connected to Google Drive', 'success');
+                    }
+                }).catch((error) => {
+                    console.error('Error initializing Google API client:', error);
+                    this.updateCloudSyncStatus('Connection failed', 'error');
+                });
+            }
+
+            toggleCloudSync(enabled) {
+                this.setCloudSyncSetting(enabled);
+                
+                if (enabled) {
+                    // Check if API credentials are configured
+                    if (!this.GOOGLE_CLIENT_ID || !this.GOOGLE_API_KEY) {
+                        alert('Cloud sync requires Google API credentials to be configured.\n\n' +
+                              'To enable cloud sync:\n' +
+                              '1. Create a Google Cloud project at https://console.cloud.google.com\n' +
+                              '2. Enable the Google Drive API\n' +
+                              '3. Create OAuth 2.0 credentials\n' +
+                              '4. Update the GOOGLE_CLIENT_ID and GOOGLE_API_KEY in the code\n\n' +
+                              'For now, you can use the "Save Data" and "Load Data" buttons to manually backup to cloud storage.');
+                        const toggle = document.getElementById('cloudSyncToggle');
+                        if (toggle) {
+                            toggle.checked = false;
+                        }
+                        this.setCloudSyncSetting(false);
+                        return;
+                    }
+                    
+                    // Initialize and sign in to Google
+                    this.loadGoogleAPI();
+                    this.signInToGoogle();
+                } else {
+                    // Sign out from Google
+                    this.signOutFromGoogle();
+                }
+                
+                this.updateCloudSyncUI();
+            }
+
+            signInToGoogle() {
+                if (typeof gapi === 'undefined' || !gapi.auth2) {
+                    this.updateCloudSyncStatus('Google API not loaded', 'error');
+                    return;
+                }
+
+                const authInstance = gapi.auth2.getAuthInstance();
+                if (authInstance) {
+                    authInstance.signIn().then(() => {
+                        this.updateCloudSyncStatus('Connected to Google Drive', 'success');
+                        this.syncToCloud();
+                    }).catch((error) => {
+                        console.error('Sign-in error:', error);
+                        this.updateCloudSyncStatus('Sign-in failed', 'error');
+                    });
+                }
+            }
+
+            signOutFromGoogle() {
+                if (typeof gapi !== 'undefined' && gapi.auth2) {
+                    const authInstance = gapi.auth2.getAuthInstance();
+                    if (authInstance) {
+                        authInstance.signOut().then(() => {
+                            this.updateCloudSyncStatus('Disconnected', 'info');
+                        });
+                    }
+                }
+            }
+
+            updateCloudSyncUI(isSignedIn = false) {
+                const statusDiv = document.getElementById('cloudSyncStatus');
+                const cloudSyncEnabled = this.getCloudSyncSetting();
+                
+                if (statusDiv) {
+                    statusDiv.style.display = cloudSyncEnabled ? 'flex' : 'none';
+                }
+                
+                if (cloudSyncEnabled && !isSignedIn) {
+                    this.updateCloudSyncStatus('Click "Sync Now" to connect', 'info');
+                }
+            }
+
+            updateCloudSyncStatus(message, type = 'info') {
+                const statusText = document.getElementById('cloudSyncStatusText');
+                if (statusText) {
+                    statusText.textContent = message;
+                    statusText.style.color = type === 'success' ? 'var(--success-text)' : 
+                                            type === 'error' ? 'var(--danger-text)' : 
+                                            'var(--info-text)';
+                }
+            }
+
+            async manualCloudSync() {
+                const cloudSyncEnabled = this.getCloudSyncSetting();
+                if (!cloudSyncEnabled) {
+                    return;
+                }
+
+                // Check if user is signed in
+                if (typeof gapi === 'undefined' || !gapi.auth2) {
+                    // Fallback: use manual save/load workflow
+                    this.showCloudSyncHelp();
+                    return;
+                }
+
+                const authInstance = gapi.auth2.getAuthInstance();
+                if (!authInstance || !authInstance.isSignedIn.get()) {
+                    this.signInToGoogle();
+                    return;
+                }
+
+                await this.syncToCloud();
+            }
+
+            async syncToCloud() {
+                this.updateCloudSyncStatus('Syncing...', 'info');
+                
+                try {
+                    // Get or create the time tracker file on Google Drive
+                    const fileId = await this.getOrCreateDriveFile();
+                    
+                    // Upload the current data
+                    await this.uploadToDrive(fileId);
+                    
+                    this.updateCloudSyncStatus('Synced successfully', 'success');
+                    
+                    // Store last sync time
+                    localStorage.setItem('lastCloudSync', new Date().toISOString());
+                } catch (error) {
+                    console.error('Cloud sync error:', error);
+                    this.updateCloudSyncStatus('Sync failed', 'error');
+                }
+            }
+
+            async getOrCreateDriveFile() {
+                const fileName = 'mytimetracker-data.json';
+                
+                // Search for existing file
+                try {
+                    const response = await gapi.client.drive.files.list({
+                        q: `name='${fileName}' and trashed=false`,
+                        spaces: 'drive',
+                        fields: 'files(id, name)'
+                    });
+                    
+                    if (response.result.files && response.result.files.length > 0) {
+                        return response.result.files[0].id;
+                    }
+                    
+                    // Create new file if it doesn't exist
+                    const createResponse = await gapi.client.drive.files.create({
+                        resource: {
+                            name: fileName,
+                            mimeType: 'application/json'
+                        },
+                        fields: 'id'
+                    });
+                    
+                    return createResponse.result.id;
+                } catch (error) {
+                    throw new Error('Failed to access Google Drive: ' + error.message);
+                }
+            }
+
+            async uploadToDrive(fileId) {
+                const dataStr = JSON.stringify(this.data, null, 2);
+                const boundary = '-------314159265358979323846';
+                const delimiter = "\r\n--" + boundary + "\r\n";
+                const close_delim = "\r\n--" + boundary + "--";
+                
+                const metadata = {
+                    mimeType: 'application/json'
+                };
+                
+                const multipartRequestBody =
+                    delimiter +
+                    'Content-Type: application/json\r\n\r\n' +
+                    JSON.stringify(metadata) +
+                    delimiter +
+                    'Content-Type: application/json\r\n\r\n' +
+                    dataStr +
+                    close_delim;
+                
+                try {
+                    await gapi.client.request({
+                        path: `/upload/drive/v3/files/${fileId}`,
+                        method: 'PATCH',
+                        params: { uploadType: 'multipart' },
+                        headers: {
+                            'Content-Type': 'multipart/related; boundary="' + boundary + '"'
+                        },
+                        body: multipartRequestBody
+                    });
+                } catch (error) {
+                    throw new Error('Failed to upload to Google Drive: ' + error.message);
+                }
+            }
+
+            showCloudSyncHelp() {
+                alert('Cloud Sync Setup:\n\n' +
+                      'To automatically save your data to the cloud:\n\n' +
+                      '1. Enable Cloud Auto-Save in Settings\n' +
+                      '2. Click "Sync Now" to connect to Google Drive\n' +
+                      '3. Your data will be automatically backed up\n\n' +
+                      'Alternative: Use the "Save Data" button to manually download your data as JSON, ' +
+                      'then upload it to your preferred cloud storage (Google Drive, iCloud, Dropbox, etc.).');
+            }
+
             showUpdateNotification() {
                 const notification = document.getElementById('updateNotification');
                 if (notification) {
@@ -1080,6 +1406,29 @@
 
             saveData() {
                 localStorage.setItem('timeTrackerData', JSON.stringify(this.data));
+                
+                // Trigger cloud sync if enabled
+                if (this.getCloudSyncSetting()) {
+                    // Use debouncing to avoid too frequent syncs
+                    clearTimeout(this.cloudSyncTimeout);
+                    this.cloudSyncTimeout = setTimeout(() => {
+                        this.autoSyncToCloud();
+                    }, 2000); // Wait 2 seconds after last change before syncing
+                }
+            }
+
+            async autoSyncToCloud() {
+                // Only sync if signed in
+                if (typeof gapi !== 'undefined' && gapi.auth2) {
+                    const authInstance = gapi.auth2.getAuthInstance();
+                    if (authInstance && authInstance.isSignedIn.get()) {
+                        try {
+                            await this.syncToCloud();
+                        } catch (error) {
+                            console.error('Auto-sync failed:', error);
+                        }
+                    }
+                }
             }
 
             getMonday(date) {

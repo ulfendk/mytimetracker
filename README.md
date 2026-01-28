@@ -10,6 +10,7 @@ A simple, browser-based work time tracking application that requires no backend.
 - 📆 Monthly overview with balance tracking (actual vs expected hours)
 - 🏖️ Mark days off and holidays
 - 💾 All data stored in browser (localStorage)
+- ☁️ **Cloud Auto-Save** - Automatically backup to Google Drive (optional)
 - 📤 Save data as JSON
 - 📥 Load previously saved data
 - 📊 **Export to Excel** - Download monthly reports with detailed breakdowns
@@ -70,6 +71,31 @@ Click the "Save Data" button to download your time tracking data as a JSON file.
 ### Load Data
 Click the "Load Data" button and paste your previously saved JSON data to restore it.
 
+### Cloud Auto-Save (Optional)
+
+My Time Tracker now supports automatic cloud backup to Google Drive!
+
+**To enable Cloud Auto-Save:**
+
+1. Click the Settings button (⚙️) in the app header (visible when installed as PWA)
+2. Enable the "Cloud Auto-Save" toggle
+3. Click "Sync Now" to connect to your Google Drive account
+4. Your data will automatically sync to Google Drive whenever you make changes
+
+**Features:**
+- ✅ Automatic backup whenever data changes
+- ✅ Stores data in a single file `mytimetracker-data.json` in your Google Drive
+- ✅ Works across all your devices (same Google account)
+- ✅ No manual downloads needed
+
+**Alternative Method (Manual Backup):**
+If you prefer manual control or want to use a different cloud service (iCloud, Dropbox, OneDrive, etc.):
+1. Use the "Save Data" button to download your data as JSON
+2. Upload the JSON file to your preferred cloud storage
+3. Access from any device by downloading and using "Load Data"
+
+**Note:** Cloud Auto-Save requires Google API credentials to be configured. If not configured, the app will guide you through manual backup options.
+
 ### Export to Excel
 Click the "Export to Excel" button to download a comprehensive monthly report as an Excel (.xlsx) file. The exported file contains three sheets:
 
@@ -120,6 +146,7 @@ The monthly overview automatically:
 
 - **No Backend Required**: All functionality runs entirely in the browser
 - **Data Storage**: Uses browser's localStorage API
+- **Cloud Sync**: Optional Google Drive integration for automatic backups
 - **Data Format**: JSON
 - **Responsive Design**: Works on desktop and mobile devices
 - **Progressive Web App**: Installable with offline support via Service Worker

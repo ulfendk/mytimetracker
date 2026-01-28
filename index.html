@@ -923,6 +923,8 @@
                 this.expectedHoursPerDay = 7.4; // Average work day (37h/5 days)
                 this.workingDaysPerWeek = 5; // Default working days per week (Mon-Fri)
                 this.availableCountries = [];
+                this.cloudSyncTimeout = null; // Initialize cloud sync timeout
+                this.CLOUD_SYNC_DEBOUNCE_MS = 2000; // Debounce time for auto-sync
                 this.init();
             }
 
@@ -1064,26 +1066,6 @@
                     localStorage.setItem('cloudSyncEnabled', enabled.toString());
                 } catch (e) {
                     console.warn('Unable to save cloud sync preference');
-                }
-            }
-
-            getGoogleAccessToken() {
-                try {
-                    return localStorage.getItem('googleAccessToken');
-                } catch (e) {
-                    return null;
-                }
-            }
-
-            setGoogleAccessToken(token) {
-                try {
-                    if (token) {
-                        localStorage.setItem('googleAccessToken', token);
-                    } else {
-                        localStorage.removeItem('googleAccessToken');
-                    }
-                } catch (e) {
-                    console.warn('Unable to save Google access token');
                 }
             }
 
@@ -1258,13 +1240,17 @@
                 
                 // Search for existing file
                 try {
+                    // Escape single quotes in filename to prevent query injection
+                    const escapedFileName = fileName.replace(/'/g, "\\'");
                     const response = await gapi.client.drive.files.list({
-                        q: `name='${fileName}' and trashed=false`,
+                        q: `name='${escapedFileName}' and trashed=false`,
                         spaces: 'drive',
-                        fields: 'files(id, name)'
+                        fields: 'files(id, name)',
+                        orderBy: 'createdTime' // Get oldest file first to handle duplicates
                     });
                     
                     if (response.result.files && response.result.files.length > 0) {
+                        // Use the first (oldest) file if multiple exist
                         return response.result.files[0].id;
                     }
                     
@@ -1279,6 +1265,7 @@
                     
                     return createResponse.result.id;
                 } catch (error) {
+                    console.error('Failed to access Google Drive:', error);
                     throw new Error('Failed to access Google Drive: ' + error.message);
                 }
             }
@@ -1313,6 +1300,7 @@
                         body: multipartRequestBody
                     });
                 } catch (error) {
+                    console.error('Failed to upload to Google Drive:', error);
                     throw new Error('Failed to upload to Google Drive: ' + error.message);
                 }
             }
@@ -1413,7 +1401,7 @@
                     clearTimeout(this.cloudSyncTimeout);
                     this.cloudSyncTimeout = setTimeout(() => {
                         this.autoSyncToCloud();
-                    }, 2000); // Wait 2 seconds after last change before syncing
+                    }, this.CLOUD_SYNC_DEBOUNCE_MS);
                 }
             }
 
@@ -1426,6 +1414,8 @@
                             await this.syncToCloud();
                         } catch (error) {
                             console.error('Auto-sync failed:', error);
+                            // Update status to show sync failure
+                            this.updateCloudSyncStatus('Auto-sync failed - will retry', 'error');
                         }
                     }
                 }

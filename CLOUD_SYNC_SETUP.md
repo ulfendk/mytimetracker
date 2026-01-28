@@ -62,7 +62,7 @@ This guide will help you configure Google Drive integration for automatic cloud 
 ### 5. Configure the Application
 
 1. Open `index.html` in a text editor
-2. Find the `initCloudSync()` method (around line 1030)
+2. Find the `initCloudSync()` method within the TimeTracker class
 3. Update the following lines with your credentials:
    ```javascript
    this.GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID_HERE';

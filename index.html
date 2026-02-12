@@ -1098,18 +1098,22 @@
                 }
             }
 
-            async syncToGitHub() {
+            async syncToGitHub(isAutoSync = false) {
                 const settings = this.loadGitHubSettings();
                 
                 if (!settings.token || !settings.repo) {
-                    alert('Please configure GitHub settings first (gear icon ⚙️)');
+                    if (!isAutoSync) {
+                        alert('Please configure GitHub settings first (gear icon ⚙️)');
+                    }
                     return;
                 }
 
                 try {
                     const [owner, repo] = settings.repo.split('/');
                     if (!owner || !repo) {
-                        alert('Invalid repository format. Use: owner/repo');
+                        if (!isAutoSync) {
+                            alert('Invalid repository format. Use: owner/repo');
+                        }
                         return;
                     }
 
@@ -1134,7 +1138,8 @@
                             const remoteContent = JSON.parse(atob(fileData.content));
                             const hasConflicts = this.detectConflicts(remoteContent);
                             
-                            if (hasConflicts && !confirm('Remote data differs from local data. This will overwrite remote data. Continue?')) {
+                            // Only prompt for conflicts on manual sync, not auto-sync
+                            if (hasConflicts && !isAutoSync && !confirm('Remote data differs from local data. This will overwrite remote data. Continue?')) {
                                 return;
                             }
                         }
@@ -1171,10 +1176,20 @@
                         throw new Error(error.message || 'Failed to push to GitHub');
                     }
 
-                    alert('✅ Data successfully pushed to GitHub!');
+                    // Only show success message for manual sync
+                    if (!isAutoSync) {
+                        alert('✅ Data successfully pushed to GitHub!');
+                    } else {
+                        console.log('✅ Auto-sync: Data successfully pushed to GitHub');
+                    }
                 } catch (error) {
                     console.error('GitHub sync error:', error);
-                    alert('❌ Error pushing to GitHub: ' + error.message);
+                    // Only show alert for manual sync, log for auto-sync
+                    if (!isAutoSync) {
+                        alert('❌ Error pushing to GitHub: ' + error.message);
+                    } else {
+                        console.warn('⚠️ Auto-sync failed:', error.message);
+                    }
                 }
             }
 
@@ -1272,7 +1287,8 @@
             }
 
             mergeData(localData, remoteData) {
-                // Merge strategy: combine all dates, prefer most recent interval data
+                // Merge strategy: combine all dates, prefer local data for overlapping dates
+                // This strategy ensures no data loss while prioritizing the current device's data
                 const merged = {
                     dates: { ...remoteData.dates, ...localData.dates },
                     selectedCountry: localData.selectedCountry || remoteData.selectedCountry || '',
@@ -1292,13 +1308,20 @@
                         const seen = new Set();
                         
                         for (const interval of allIntervals) {
-                            const key = `${interval.start}-${interval.end}-${interval.break}`;
+                            // Use JSON.stringify with sorted keys to create a consistent key
+                            // Handle undefined/null values explicitly
+                            const key = JSON.stringify({
+                                start: interval.start || '',
+                                end: interval.end || '',
+                                break: interval.break ?? 0
+                            });
                             if (!seen.has(key)) {
                                 seen.add(key);
                                 uniqueIntervals.push(interval);
                             }
                         }
                         
+                        // Merge with local preferences taking priority
                         merged.dates[dateKey] = {
                             ...remote,
                             ...local,
@@ -1400,7 +1423,7 @@
                     }
                     // Debounce auto-sync by 3 seconds to avoid excessive API calls
                     this.autoSyncTimeout = setTimeout(() => {
-                        this.syncToGitHub();
+                        this.syncToGitHub(true); // Pass true to indicate this is auto-sync
                         this.autoSyncTimeout = null;
                     }, 3000);
                 }

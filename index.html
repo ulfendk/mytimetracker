@@ -900,6 +900,9 @@
                         <small style="color: var(--text-muted); display: block; margin-top: 5px;">
                             Create a token at <a href="https://github.com/settings/tokens/new" target="_blank" style="color: var(--accent-primary);">GitHub Settings</a> with 'repo' scope
                         </small>
+                        <small style="color: var(--danger-text); display: block; margin-top: 5px; font-weight: 500;">
+                            ⚠️ Warning: Token is stored in browser localStorage without encryption. Only use on trusted devices.
+                        </small>
                     </div>
                     
                     <div class="settings-option" style="display: block; margin-bottom: 15px;">
@@ -948,6 +951,7 @@
                 this.expectedHoursPerDay = 7.4; // Average work day (37h/5 days)
                 this.workingDaysPerWeek = 5; // Default working days per week (Mon-Fri)
                 this.availableCountries = [];
+                this.autoSyncTimeout = null; // For debouncing auto-sync
                 this.init();
             }
 
@@ -1239,15 +1243,23 @@
             }
 
             detectConflicts(remoteData) {
-                // Simple conflict detection: check if dates differ
+                // Improved conflict detection: check if dates actually differ
                 const localDates = Object.keys(this.data.dates || {}).sort();
                 const remoteDates = Object.keys(remoteData.dates || {}).sort();
                 
+                // Check if the sets of dates differ
                 if (localDates.length !== remoteDates.length) {
                     return true;
                 }
                 
-                // Check if any date entries differ
+                // Check if date keys are different (not just count)
+                for (let i = 0; i < localDates.length; i++) {
+                    if (localDates[i] !== remoteDates[i]) {
+                        return true;
+                    }
+                }
+                
+                // Check if any date entries differ in content
                 for (const dateKey of localDates) {
                     const localEntry = JSON.stringify(this.data.dates[dateKey]);
                     const remoteEntry = JSON.stringify(remoteData.dates?.[dateKey]);
@@ -1379,11 +1391,18 @@
             saveData() {
                 localStorage.setItem('timeTrackerData', JSON.stringify(this.data));
                 
-                // Auto-sync to GitHub if enabled
+                // Auto-sync to GitHub if enabled (with debouncing)
                 const settings = this.loadGitHubSettings();
                 if (settings.autoSync && settings.token && settings.repo) {
-                    // Use setTimeout to avoid blocking the UI
-                    setTimeout(() => this.syncToGitHub(), 100);
+                    // Clear any pending auto-sync
+                    if (this.autoSyncTimeout) {
+                        clearTimeout(this.autoSyncTimeout);
+                    }
+                    // Debounce auto-sync by 3 seconds to avoid excessive API calls
+                    this.autoSyncTimeout = setTimeout(() => {
+                        this.syncToGitHub();
+                        this.autoSyncTimeout = null;
+                    }, 3000);
                 }
             }
 

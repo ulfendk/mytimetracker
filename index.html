@@ -778,6 +778,8 @@
         <div class="main-content">
             <div class="controls">
                 <button class="btn btn-primary" onclick="app.showMonthlyOverview()">📅 Monthly Overview</button>
+                <button class="btn btn-secondary" onclick="app.syncFromGitHub()">⬇️ Pull from GitHub</button>
+                <button class="btn btn-secondary" onclick="app.syncToGitHub()">⬆️ Push to GitHub</button>
                 <button class="btn btn-secondary" onclick="app.exportData()">📤 Save Data</button>
                 <button class="btn btn-secondary" onclick="app.exportToExcel()">📊 Export to Excel</button>
                 <button class="btn btn-secondary" onclick="app.importData()">📥 Load Data</button>
@@ -883,6 +885,53 @@
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                    <h3 style="margin-bottom: 15px; color: var(--text-primary);">GitHub Sync</h3>
+                    <p style="margin-bottom: 15px; color: var(--text-secondary); font-size: 0.9em;">
+                        Sync your time tracking data with a GitHub repository to share across devices.
+                    </p>
+                    
+                    <div class="settings-option" style="display: block; margin-bottom: 15px;">
+                        <label for="githubToken" style="display: block; margin-bottom: 5px; color: var(--text-primary); font-weight: 500;">
+                            Personal Access Token
+                        </label>
+                        <input type="password" id="githubToken" placeholder="ghp_..." style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); color: var(--text-primary);">
+                        <small style="color: var(--text-muted); display: block; margin-top: 5px;">
+                            Create a token at <a href="https://github.com/settings/tokens/new" target="_blank" style="color: var(--accent-primary);">GitHub Settings</a> with 'repo' scope
+                        </small>
+                    </div>
+                    
+                    <div class="settings-option" style="display: block; margin-bottom: 15px;">
+                        <label for="githubRepo" style="display: block; margin-bottom: 5px; color: var(--text-primary); font-weight: 500;">
+                            Repository (owner/repo)
+                        </label>
+                        <input type="text" id="githubRepo" placeholder="username/my-timetracker-data" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); color: var(--text-primary);">
+                        <small style="color: var(--text-muted); display: block; margin-top: 5px;">
+                            The repository must exist and be accessible with your token
+                        </small>
+                    </div>
+                    
+                    <div class="settings-option" style="display: block; margin-bottom: 15px;">
+                        <label for="githubPath" style="display: block; margin-bottom: 5px; color: var(--text-primary); font-weight: 500;">
+                            File Path
+                        </label>
+                        <input type="text" id="githubPath" placeholder="timetracker-data.json" value="timetracker-data.json" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--bg-secondary); color: var(--text-primary);">
+                    </div>
+                    
+                    <div class="settings-option">
+                        <div class="settings-label">
+                            <div class="settings-label-title">Auto-Sync</div>
+                            <div class="settings-label-desc">Automatically sync on data changes</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="autoSyncToggle" onchange="app.toggleAutoSync(this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="app.saveGitHubSettings()" style="margin-top: 15px;">Save GitHub Settings</button>
+                </div>
             </div>
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="app.closeSettingsModal()">Close</button>
@@ -986,6 +1035,13 @@
             toggleSettings() {
                 const modal = document.getElementById('settingsModal');
                 if (modal) {
+                    // Load GitHub settings into the form
+                    const settings = this.loadGitHubSettings();
+                    document.getElementById('githubToken').value = settings.token || '';
+                    document.getElementById('githubRepo').value = settings.repo || '';
+                    document.getElementById('githubPath').value = settings.path || 'timetracker-data.json';
+                    document.getElementById('autoSyncToggle').checked = settings.autoSync || false;
+                    
                     modal.classList.add('active');
                 }
             }
@@ -1000,6 +1056,248 @@
             toggleAutoUpdate(enabled) {
                 this.setAutoUpdateSetting(enabled);
             }
+
+            // GitHub Sync Methods
+            loadGitHubSettings() {
+                try {
+                    const settings = localStorage.getItem('githubSettings');
+                    return settings ? JSON.parse(settings) : { token: '', repo: '', path: 'timetracker-data.json', autoSync: false };
+                } catch (e) {
+                    console.warn('Unable to load GitHub settings');
+                    return { token: '', repo: '', path: 'timetracker-data.json', autoSync: false };
+                }
+            }
+
+            saveGitHubSettings() {
+                const token = document.getElementById('githubToken').value.trim();
+                const repo = document.getElementById('githubRepo').value.trim();
+                const path = document.getElementById('githubPath').value.trim();
+                const autoSync = document.getElementById('autoSyncToggle').checked;
+
+                const settings = { token, repo, path, autoSync };
+                
+                try {
+                    localStorage.setItem('githubSettings', JSON.stringify(settings));
+                    alert('GitHub settings saved successfully!');
+                } catch (e) {
+                    alert('Error saving GitHub settings: ' + e.message);
+                }
+            }
+
+            toggleAutoSync(enabled) {
+                const settings = this.loadGitHubSettings();
+                settings.autoSync = enabled;
+                try {
+                    localStorage.setItem('githubSettings', JSON.stringify(settings));
+                } catch (e) {
+                    console.warn('Unable to save auto-sync preference');
+                }
+            }
+
+            async syncToGitHub() {
+                const settings = this.loadGitHubSettings();
+                
+                if (!settings.token || !settings.repo) {
+                    alert('Please configure GitHub settings first (gear icon ⚙️)');
+                    return;
+                }
+
+                try {
+                    const [owner, repo] = settings.repo.split('/');
+                    if (!owner || !repo) {
+                        alert('Invalid repository format. Use: owner/repo');
+                        return;
+                    }
+
+                    // Get current file from GitHub to get SHA for update
+                    let sha = null;
+                    try {
+                        const getResponse = await fetch(
+                            `https://api.github.com/repos/${owner}/${repo}/contents/${settings.path}`,
+                            {
+                                headers: {
+                                    'Authorization': `token ${settings.token}`,
+                                    'Accept': 'application/vnd.github.v3+json'
+                                }
+                            }
+                        );
+
+                        if (getResponse.ok) {
+                            const fileData = await getResponse.json();
+                            sha = fileData.sha;
+                            
+                            // Check for conflicts
+                            const remoteContent = JSON.parse(atob(fileData.content));
+                            const hasConflicts = this.detectConflicts(remoteContent);
+                            
+                            if (hasConflicts && !confirm('Remote data differs from local data. This will overwrite remote data. Continue?')) {
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        // File might not exist yet, which is okay
+                        console.log('File does not exist yet, will create it');
+                    }
+
+                    // Create or update file
+                    const content = btoa(JSON.stringify(this.data, null, 2));
+                    const message = `Update time tracker data - ${new Date().toISOString()}`;
+
+                    const body = {
+                        message,
+                        content,
+                        ...(sha && { sha })
+                    };
+
+                    const response = await fetch(
+                        `https://api.github.com/repos/${owner}/${repo}/contents/${settings.path}`,
+                        {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `token ${settings.token}`,
+                                'Accept': 'application/vnd.github.v3+json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(body)
+                        }
+                    );
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Failed to push to GitHub');
+                    }
+
+                    alert('✅ Data successfully pushed to GitHub!');
+                } catch (error) {
+                    console.error('GitHub sync error:', error);
+                    alert('❌ Error pushing to GitHub: ' + error.message);
+                }
+            }
+
+            async syncFromGitHub() {
+                const settings = this.loadGitHubSettings();
+                
+                if (!settings.token || !settings.repo) {
+                    alert('Please configure GitHub settings first (gear icon ⚙️)');
+                    return;
+                }
+
+                try {
+                    const [owner, repo] = settings.repo.split('/');
+                    if (!owner || !repo) {
+                        alert('Invalid repository format. Use: owner/repo');
+                        return;
+                    }
+
+                    const response = await fetch(
+                        `https://api.github.com/repos/${owner}/${repo}/contents/${settings.path}`,
+                        {
+                            headers: {
+                                'Authorization': `token ${settings.token}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            }
+                        }
+                    );
+
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            alert('File not found in repository. Push your data first.');
+                            return;
+                        }
+                        throw new Error('Failed to fetch from GitHub');
+                    }
+
+                    const fileData = await response.json();
+                    const content = JSON.parse(atob(fileData.content));
+
+                    // Detect conflicts
+                    const hasConflicts = this.detectConflicts(content);
+                    
+                    if (hasConflicts) {
+                        const mergeChoice = confirm(
+                            'Conflicts detected between local and remote data.\n\n' +
+                            'OK = Merge data (combine both)\n' +
+                            'Cancel = Replace local data with remote data'
+                        );
+                        
+                        if (mergeChoice) {
+                            this.data = this.mergeData(this.data, content);
+                        } else {
+                            this.data = content;
+                        }
+                    } else {
+                        this.data = content;
+                    }
+
+                    this.saveData();
+                    this.render();
+                    alert('✅ Data successfully pulled from GitHub!');
+                } catch (error) {
+                    console.error('GitHub sync error:', error);
+                    alert('❌ Error pulling from GitHub: ' + error.message);
+                }
+            }
+
+            detectConflicts(remoteData) {
+                // Simple conflict detection: check if dates differ
+                const localDates = Object.keys(this.data.dates || {}).sort();
+                const remoteDates = Object.keys(remoteData.dates || {}).sort();
+                
+                if (localDates.length !== remoteDates.length) {
+                    return true;
+                }
+                
+                // Check if any date entries differ
+                for (const dateKey of localDates) {
+                    const localEntry = JSON.stringify(this.data.dates[dateKey]);
+                    const remoteEntry = JSON.stringify(remoteData.dates?.[dateKey]);
+                    if (localEntry !== remoteEntry) {
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+
+            mergeData(localData, remoteData) {
+                // Merge strategy: combine all dates, prefer most recent interval data
+                const merged = {
+                    dates: { ...remoteData.dates, ...localData.dates },
+                    selectedCountry: localData.selectedCountry || remoteData.selectedCountry || '',
+                    holidays: { ...remoteData.holidays, ...localData.holidays },
+                    weeklyExpectedHours: { ...remoteData.weeklyExpectedHours, ...localData.weeklyExpectedHours }
+                };
+
+                // For each date, merge intervals if both exist
+                for (const dateKey in merged.dates) {
+                    if (localData.dates?.[dateKey] && remoteData.dates?.[dateKey]) {
+                        const local = localData.dates[dateKey];
+                        const remote = remoteData.dates[dateKey];
+                        
+                        // Merge intervals by combining unique ones
+                        const allIntervals = [...(remote.intervals || []), ...(local.intervals || [])];
+                        const uniqueIntervals = [];
+                        const seen = new Set();
+                        
+                        for (const interval of allIntervals) {
+                            const key = `${interval.start}-${interval.end}-${interval.break}`;
+                            if (!seen.has(key)) {
+                                seen.add(key);
+                                uniqueIntervals.push(interval);
+                            }
+                        }
+                        
+                        merged.dates[dateKey] = {
+                            ...remote,
+                            ...local,
+                            intervals: uniqueIntervals
+                        };
+                    }
+                }
+
+                return merged;
+            }
+
 
             showUpdateNotification() {
                 const notification = document.getElementById('updateNotification');
@@ -1080,6 +1378,13 @@
 
             saveData() {
                 localStorage.setItem('timeTrackerData', JSON.stringify(this.data));
+                
+                // Auto-sync to GitHub if enabled
+                const settings = this.loadGitHubSettings();
+                if (settings.autoSync && settings.token && settings.repo) {
+                    // Use setTimeout to avoid blocking the UI
+                    setTimeout(() => this.syncToGitHub(), 100);
+                }
             }
 
             getMonday(date) {

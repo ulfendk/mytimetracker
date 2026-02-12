@@ -1,6 +1,6 @@
 # My Time Tracker
 
-A simple, browser-based work time tracking application that requires no backend. All data is stored locally in your browser.
+A simple, browser-based work time tracking application that requires no backend. All data is stored locally in your browser with optional GitHub sync for cross-device access.
 
 ## Features
 
@@ -10,6 +10,7 @@ A simple, browser-based work time tracking application that requires no backend.
 - 📆 Monthly overview with balance tracking (actual vs expected hours)
 - 🏖️ Mark days off and holidays
 - 💾 All data stored in browser (localStorage)
+- 🔄 **GitHub Sync** - Sync data across devices using a GitHub repository
 - 📤 Save data as JSON
 - 📥 Load previously saved data
 - 📊 **Export to Excel** - Download monthly reports with detailed breakdowns
@@ -60,6 +61,46 @@ My Time Tracker can be installed as a Progressive Web App on your device for a n
 7. Click "Monthly Overview" to see monthly statistics and balance tracking
 
 ## Data Management
+
+### GitHub Sync (NEW!)
+
+Sync your time tracking data with a GitHub repository to access it from multiple devices. This feature allows you to:
+- Share data across different browsers and devices
+- Keep your data backed up on GitHub
+- Automatically merge changes when conflicts occur
+
+#### Setup GitHub Sync
+
+1. **Create a Personal Access Token**:
+   - Go to [GitHub Settings > Tokens](https://github.com/settings/tokens/new)
+   - Create a new token with `repo` scope
+   - Copy the token (it starts with `ghp_`)
+
+2. **Create a Repository** (if you don't have one):
+   - Create a new GitHub repository (can be private)
+   - Note the repository name in the format `username/repo-name`
+
+3. **Configure in App**:
+   - Click the ⚙️ Settings button
+   - Scroll to "GitHub Sync" section
+   - Enter your Personal Access Token
+   - Enter your repository in format: `username/repo-name`
+   - Optionally change the file path (default: `timetracker-data.json`)
+   - Enable "Auto-Sync" to automatically push changes
+   - Click "Save GitHub Settings"
+
+#### Using GitHub Sync
+
+- **⬆️ Push to GitHub**: Upload your current data to GitHub repository
+- **⬇️ Pull from GitHub**: Download data from GitHub repository
+
+#### Conflict Resolution
+
+When pulling data from GitHub, the app will detect if there are conflicts:
+- **Merge**: Combines both local and remote data (recommended for multi-device use)
+- **Replace**: Replaces local data with remote data
+
+When pushing data to GitHub, if remote data differs, you'll be asked to confirm overwrite.
 
 ### Save Data
 Click the "Save Data" button to download your time tracking data as a JSON file. This allows you to:
@@ -119,8 +160,10 @@ The monthly overview automatically:
 ## Technical Details
 
 - **No Backend Required**: All functionality runs entirely in the browser
-- **Data Storage**: Uses browser's localStorage API
+- **Data Storage**: Uses browser's localStorage API with optional GitHub sync
+- **GitHub Integration**: Uses GitHub REST API for repository-based storage
 - **Data Format**: JSON
+- **Conflict Resolution**: Automatic merge or manual resolution for multi-device sync
 - **Responsive Design**: Works on desktop and mobile devices
 - **Progressive Web App**: Installable with offline support via Service Worker
 - **Deployment**: Automatically deployed to GitHub Pages on PR merge to main branch
